@@ -7,6 +7,8 @@ demo/output/
 demo/input
 model_data/
 romp/
+*demo_frames*
+*.jpg
 demo/*_results*/
 active_configs/*
 configs/*_self.yml
@@ -16,3 +18,4 @@ dist/
 .eggs/
 __pycache__/
 log/*
+.idea/
