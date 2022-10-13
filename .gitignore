@@ -3,6 +3,8 @@ trained_models/
 models/
 demo/videos/
 demo/animation/
+demo/output/
+demo/input
 model_data/
 romp/
 demo/*_results*/
@@ -13,5 +15,4 @@ dist/
 *.egg-info/
 .eggs/
 __pycache__/
-demo/images/
 log/*
