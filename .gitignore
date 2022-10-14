@@ -11,7 +11,7 @@ romp/
 *.jpg
 demo/*_results*/
 active_configs/*
-configs/*_self.yml
+#configs/*_self.yml
 build/
 dist/
 *.egg-info/
