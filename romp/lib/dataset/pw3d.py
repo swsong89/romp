@@ -2,6 +2,8 @@ import sys, os
 from dataset.image_base import *
 from dataset.base import Base_Classes, Test_Funcs
 
+from utils import transform_rot_representation
+
 set_names = {'all':['train','val','test'],'test':['test'],'val':['train','val','test']}
 PW3D_PCsubset = {'courtyard_basketball_00':[200,280], 'courtyard_captureSelfies_00':[500,600],\
                 'courtyard_dancing_00':[60,370],  'courtyard_dancing_01':[60,270], 'courtyard_hug_00':[100,500], 'downtown_bus_00':[1620,1900]}
@@ -18,27 +20,28 @@ def PW3D(base_class=default_mode):
         def __init__(self,train_flag = False, split='train', mode='vibe', regress_smpl=True, **kwargs):
             super(PW3D, self).__init__(train_flag, regress_smpl=regress_smpl)
             self.data_folder = os.path.join(self.data_folder,'3DPW/')
-            if not os.path.isdir(self.data_folder):
+            if not os.path.isdir(self.data_folder):  # '/home/ssw/code/dataset/3DPW/'
                 self.data_folder = '/home/yusun/data_drive/dataset/3DPW/imageFiles'
-            self.data3d_dir = os.path.join(self.data_folder,'sequenceFiles')
-            self.image_dir = os.path.join(self.data_folder,'imageFiles')
-            self.mode = mode
-            self.split = split
-            self.regress_smpl = regress_smpl
+            self.data3d_dir = os.path.join(self.data_folder,'sequenceFiles')  # '/home/ssw/code/dataset/3DPW/sequenceFiles'
+            self.image_dir = os.path.join(self.data_folder,'imageFiles')  # '/home/ssw/code/dataset/3DPW/imageFiles'
+            self.mode = mode  # normal
+            self.split = split  # val
+            self.regress_smpl = regress_smpl  # true
             
-            self.val_sample_ratio = 5
+            # self.val_sample_ratio = 5  # 5个取一个, 总共有8345张
+            self.val_sample_ratio = 1  # 5个取一个, 总共有8345张
             self.scale_range = [1.1,2.]
             self.dataset_name = {'PC':'pw3d_pc', 'NC':'pw3d_nc','OC':'pw3d_oc','vibe':'pw3d_vibe', 'normal':'pw3d_normal'}[mode]
             self.use_org_annot_modes = ['normal','PC']
 
             logging.info('Start loading 3DPW data.')
-            if mode in self.use_org_annot_modes:
+            if mode in self.use_org_annot_modes:  # norm ['normal', 'PC']
                 logging.info('Loading 3DPW in {} mode, split {}'.format(self.mode,self.split))
-                self.joint_mapper = constants.joint_mapping(constants.COCO_18,constants.SMPL_ALL_54)
-                self.joint3d_mapper = constants.joint_mapping(constants.SMPL_24,constants.SMPL_ALL_54)
+                self.joint_mapper = constants.joint_mapping(constants.COCO_18,constants.SMPL_ALL_54)  # COCO对应SMPL_ALL的对应
+                self.joint3d_mapper = constants.joint_mapping(constants.SMPL_24,constants.SMPL_ALL_54)  # 0,1,2..23,-1,-1,-1....
                 self.annots_path = os.path.join(self.data_folder,'annots.npz')
-                if not os.path.exists(self.annots_path):
-                    pack_data(self.data3d_dir, self.annots_path)
+                if not os.path.exists(self.annots_path):  # 根据# '/home/ssw/code/dataset/3DPW/sequenceFiles'里面的pkl原始标注信息生成需要的annots.npz
+                    pack_data(self.data3d_dir, self.annots_path)  # 如果pw3d没有annots.npz，那么根据数据生产标注
                 self.load_annots()
             elif mode in ['vibe','NC','OC']:
                 logging.info('Loading 3DPW in VIBE mode, split {}'.format(self.split))
@@ -52,7 +55,7 @@ def PW3D(base_class=default_mode):
                 raise NotImplementedError
 
             if self.split=='val':
-                self.file_paths = self.file_paths[::self.val_sample_ratio]
+                self.file_paths = self.file_paths[::self.val_sample_ratio]  # 8345张，取1/5, 1669张，
 
             if mode in ['vibe','NC','OC']:
                 self.root_inds = [constants.SMPL_ALL_54['R_Hip'], constants.SMPL_ALL_54['L_Hip']]
@@ -212,8 +215,8 @@ def PW3D(base_class=default_mode):
         def load_annots(self):
             set_names = {'train':['train'],'all':['train','validation','test'],'val':['validation'],'test':['test']}
             split_used = set_names[self.split]
-            annots = np.load(self.annots_path,allow_pickle=True)
-            params = annots['params'][()]
+            annots = np.load(self.annots_path,allow_pickle=True)  # val验证有8345图片
+            params = annots['params'][()]  # 60个注释 train 24 test 24 val 12,视频总共由61个
             kp3ds = annots['kp3d'][()]
             kp2ds = annots['kp2d'][()]
             self.annots = {}
@@ -225,6 +228,7 @@ def PW3D(base_class=default_mode):
                 self.sequence_ids.append([])
                 valid_indices = params[video_name]['valid_indices']
                 genders = params[video_name]['genders']
+                subject_id = 0  # TODO 之前是根据视频片段，第1个视频片段0,1,第2视频片段就是2,3人...,现在需要根据每个视频片段都改成0,1  0
                 for person_id, valid_index in enumerate(valid_indices):
                     for annot_id,frame_id in enumerate(valid_index):
                         split = params[video_name]['split']

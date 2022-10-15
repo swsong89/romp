@@ -178,6 +178,7 @@ class MaxMixturePrior(nn.Module):
         
         #gmm_fn = 'gmm_{:02d}.pkl'.format(num_gaussians)
         #smpl_prior_path = os.path.join(prior_folder, gmm_fn)
+        print('ssw The path to the mixture prior {} '.format(smpl_prior_path))
         assert os.path.exists(smpl_prior_path),print('The path to the mixture prior {} does not exist'.format(smpl_prior_path))
 
         with open(smpl_prior_path, 'rb') as f:

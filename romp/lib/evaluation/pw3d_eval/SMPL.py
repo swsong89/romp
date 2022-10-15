@@ -18,11 +18,11 @@ class SMPL(object):
         self.gender = gender
 
         if gender == 'neutral':
-            self.model_path = os.path.join(model_root, 'SMPL_NEUTRAL.pkl')
+            self.model_path = os.path.join(model_root, 'basicmodel_neutral_lbs_10_207_0_v1.1.0.pkl')
         elif gender == 'f':
-            self.model_path = os.path.join(model_root, 'SMPL_FEMALE.pkl')
+            self.model_path = os.path.join(model_root, 'basicmodel_f_lbs_10_207_0_v1.0.0.pkl')
         elif gender == 'm':
-            self.model_path = os.path.join(model_root, 'SMPL_MALE.pkl')
+            self.model_path = os.path.join(model_root, 'basicmodel_m_lbs_10_207_0_v1.0.0.pkl')
 
         smpl_data = pkl.load(open(self.model_path, 'rb'), encoding = 'latin1')
 

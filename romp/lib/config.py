@@ -8,30 +8,31 @@ import logging
 import time
 import platform 
 
-currentfile = os.path.abspath(__file__)
-code_dir = currentfile.replace('config.py','')
-project_dir = currentfile.replace(os.path.sep+os.path.join('romp', 'lib', 'config.py'), '')
-source_dir = currentfile.replace(os.path.sep+os.path.join('lib', 'config.py'), '')
-root_dir = project_dir.replace(project_dir.split(os.path.sep)[-1], '')
+currentfile = os.path.abspath(__file__)  # '/home/ssw/code/romp/romp/lib/config.py'
+code_dir = currentfile.replace('config.py','')  # '/home/ssw/code/romp/romp/lib/'
+project_dir = currentfile.replace(os.path.sep+os.path.join('romp', 'lib', 'config.py'), '') # '/home/ssw/code/romp'
+source_dir = currentfile.replace(os.path.sep+os.path.join('lib', 'config.py'), '')  # '/home/ssw/code/romp/romp'
+root_dir = project_dir.replace(project_dir.split(os.path.sep)[-1], '')  # '/home/ssw/code/'
 
 time_stamp = time.strftime('%Y-%m-%d_%H:%M:%S',time.localtime(int(round(time.time()*1000))/1000))
 yaml_timestamp = os.path.abspath(os.path.join(project_dir, 'active_configs' + os.sep + "active_context_{}.yaml".format(time_stamp).replace(":","_")))
-
-model_dir = os.path.join(project_dir,'model_data')
-trained_model_dir = os.path.join(project_dir,'trained_models')
-smpl_model_dir = os.path.join(os.path.expanduser("~"),'.romp')
-if not os.path.exists(smpl_model_dir):
+# '/home/ssw/code/romp/active_configs/active_context_2022-10-15_08_28_25.yaml'
+model_dir = os.path.join(project_dir,'model_data')  # '/home/ssw/code/romp/model_data'
+trained_model_dir = os.path.join(project_dir,'trained_models')  # '/home/ssw/code/romp/trained_models'
+smpl_model_dir = os.path.join(os.path.expanduser("~"),'.romp')  # '/home/ssw/.romp'
+if not os.path.exists(smpl_model_dir):  # 如果没有这个目录就用 '/home/ssw/code/romp/model_data/smpl_models'文件里面的
     smpl_model_dir = os.path.join(model_dir,'smpl_models')
 
 print("yaml_timestamp ", yaml_timestamp)
 
-def parse_args(input_args=None):
+def parse_args(input_args=None):  # ['--configs_yml=configs/eval_3dpw_test.yml']
 
     parser = argparse.ArgumentParser(description = 'ROMP: Monocular, One-stage, Regression of Multiple 3D People')
     parser.add_argument('--tab', type = str, default = 'ROMP_v1', help = 'additional tabs')
-    parser.add_argument('--configs_yml', type = str, default = os.path.join(project_dir,'configs/v1.yml'), help = 'settings') 
+    parser.add_argument('--configs_yml', type = str, default = os.path.join(project_dir,'configs/eval_3dpw_test.yml'), help = 'settings')
+    # parser.add_argument('--configs_yml', type = str, default = os.path.join(project_dir,'configs/v1.yml'), help = 'settings')
     parser.add_argument('--inputs', type = str, help = 'path to inputs') 
-    parser.add_argument('--output_dir', type = str, help = 'path to save outputs') 
+    parser.add_argument('--output_dir', type = str, default='/home/ssw/code/romp/output', help = 'path to save outputs')
     parser.add_argument('--interactive_vis',action='store_true',help = 'whether to show the results in an interactive mode')
     parser.add_argument('--show_largest_person_only',action='store_true',help = 'whether to only show the results of the largest person in the image')
     parser.add_argument('--show_mesh_stand_on_image',action='store_true',help = 'whether to show the estimated meshes standing on the image')
@@ -80,8 +81,7 @@ def parse_args(input_args=None):
     mode_group.add_argument('--perspective_proj',type = bool,default = False,help = 'whether to use perspective projection, else use orthentic projection.')
     mode_group.add_argument('--image_loading_mode', type=str, default='image', help='The Base Class (image, image_relative) used for loading dataset.')
 
-    train_group = parser.add_argument_group(title='training options')
-    # basic training settings
+    train_group = parser.add_argument_group(title='training options')  # 都属于parser参数，不过因为参数太多了，给一些参数进行分组    # basic training settings
     train_group.add_argument('--lr', help='lr', default=3e-4,type=float)
     train_group.add_argument('--adjust_lr_factor',type = float, default = 0.1, help = 'factor for adjusting the lr')
     train_group.add_argument('--weight_decay', help='weight_decay', default=1e-6,type=float)
@@ -148,7 +148,7 @@ def parse_args(input_args=None):
     log_group = parser.add_argument_group(title='log options')
     # basic log settings
     log_group.add_argument('--print_freq', type = int, default = 50, help = 'training epochs')
-    log_group.add_argument('--model_path',type = str,default = '',help = 'trained model path')
+    log_group.add_argument('--model_path',type = str,default = os.path.join(project_dir,'trained_models', 'ROMP_HRNet32_V1.pkl'),help = 'trained model path')
     log_group.add_argument('--log-path', type = str, default = os.path.join(root_dir,'log/'), help = 'Path to save log file')
 
     hm_ae_group = parser.add_argument_group(title='learning 2D pose/associate embeddings options')
@@ -200,41 +200,41 @@ def parse_args(input_args=None):
     debug_group = parser.add_argument_group(title='Debug options')
     debug_group.add_argument('--track_memory_usage',type = bool,default = False)
 
-    parsed_args = parser.parse_args(args=input_args)
+    parsed_args = parser.parse_args(args=input_args)  # 用运行时的参数更新配置 input_args = ['--configs_yml=configs/eval_3dpw_test.yml']只是更新下parsed_args中configs_yml参数
     parsed_args.gpu = str(parsed_args.gpu)
     parsed_args.adjust_lr_epoch = []
     parsed_args.kernel_sizes = [5]
-    config_yml_path = os.path.join(project_dir, parsed_args.configs_yml)
+    config_yml_path = os.path.join(project_dir, parsed_args.configs_yml)  # '/home/ssw/code/romp/configs/v1.yml' 打开自定义config地址  '/home/ssw/code/romp/configs/eval_3dpw_test.yml'
     with open(config_yml_path) as file:
-        configs_update = yaml.full_load(file)
+        configs_update = yaml.full_load(file)  # 更新参数
     
-    for key, value in configs_update['ARGS'].items():
+    for key, value in configs_update['ARGS'].items():  # 'tab' 'V1_hrnet'
         # make sure to update the configurations from .yml that not appears in input_args.
         appear_in_input_args = False
-        for input_arg in input_args:
+        for input_arg in input_args:  # 如果运行时给定某个参数了就用这个更新配置，参数优先顺序为运行给定>yml配置文件>默认参数
             if isinstance(input_arg, str):
                 if '--{}'.format(key) in input_arg:
                     appear_in_input_args = True
         if appear_in_input_args:
             continue
         
-        if isinstance(value,str):
-            exec("parsed_args.{} = '{}'".format(key, value))
+        if isinstance(value,str):  # # 'tab' 'V1_hrnet'
+            exec("parsed_args.{} = '{}'".format(key, value))  # arsed_args.tab = 'V1_hrnet' 相当于执行的是这个
         else:
             exec("parsed_args.{} = {}".format(key, value))
 
-    if 'loss_weight' in configs_update:
-        for key, value in configs_update['loss_weight'].items():
-            exec("parsed_args.{}_weight = {}".format(key, value))
+    if 'loss_weight' in configs_update:  # 如果yml中更新了loss_weight
+        for key, value in configs_update['loss_weight'].items():  # 'PAMPJPE_weight' 360
+            exec("parsed_args.{}_weight = {}".format(key, value))  # parsed_args.PAMPJPE_weight=360
     if 'sample_prob' in configs_update:
         parsed_args.sample_prob_dict = configs_update['sample_prob']
 
     parsed_args.tab = '{}_cm{}_{}'.format(parsed_args.backbone,
                                           parsed_args.centermap_size,
                                           parsed_args.tab,
-                                          parsed_args.dataset)
+                                          parsed_args.dataset)  # 'hrnet_cm64_pw3d_test' parsed_args.model_path 'trained_models/ROMP_HRNet32_V1.pkl'
 
-    return parsed_args
+    return parsed_args  # parsed_args.model_path='trained_models/ROMP_HRNet32_V1.pkl'
 
 
 class ConfigContext(object):
@@ -244,10 +244,11 @@ class ConfigContext(object):
     accessed anywhere.
     """
     yaml_filename = yaml_timestamp
-    parsed_args = parse_args(sys.argv[1:])
+    parsed_args = parse_args(sys.argv[1:])  # sys.argv[0]=['/home/ssw/code/romp/romp/lib/evaluation/collect_3DPW_results.py']
     def __init__(self, parsed_args=None):
         if parsed_args is not None:
             self.parsed_args = parsed_args
+            print('123: ', self.parsed_args.tab)
 
     def __enter__(self):
         # if a yaml is left over here, remove it

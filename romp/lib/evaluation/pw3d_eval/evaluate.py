@@ -292,7 +292,7 @@ def get_data(paths_gt, paths_pred, truth_dir):
     for path_pred, path_gt in zip(paths_pred, paths_gt):
         seq = seq + 1
         # Open pkl files
-        data_gt = pkl.load(open(path_gt, 'rb'), encoding='latin1')
+        data_gt = pkl.load(open(path_gt, 'rb'), encoding='latin1')  # '/home/ssw/code/dataset/3DPW/sequenceFiles/validation/courtyard_basketball_01.pkl'
         data_pred = pkl.load(open(path_pred, 'rb'), encoding='latin1')
 
         genders = data_gt['genders']
@@ -307,12 +307,12 @@ def get_data(paths_gt, paths_pred, truth_dir):
             camposes_valid = data_gt['campose_valid']
             camposes_valid_i = camposes_valid[i]
 
-            valid_indices = check_valid_inds(poses2d_gt_i, camposes_valid_i)
+            valid_indices = check_valid_inds(poses2d_gt_i, camposes_valid_i)  # 498无
 
             keys_pred = data_pred.keys()
 
             # Get prediction joints
-            if 'jointPositions' in keys_pred:
+            if 'jointPositions' in keys_pred:  # keys_pred dict_keys(['jointPositions', 'orientations', 'smpl_params'])
                 num_jps_pred = num_jps_pred + 1
                 jp_pred = np.array(data_pred['jointPositions'])
                 # select a subset of prediction data
@@ -379,7 +379,9 @@ def get_paths(submit_dir, truth_dir):
     fnames_gt = []
     fnames_pred = []
 
-    keys = ['train', 'validation', 'test']
+    # keys = ['train', 'validation', 'test']
+    keys = ['validation']
+    print('3dpw eval dataset: ', keys)
 
     for key in keys:
         fnames_gt_temp = sorted(glob.glob(os.path.join(truth_dir, key, "") + "*.pkl"))
@@ -480,14 +482,19 @@ def main(submit_dir, truth_dir, output_filename):
 
 if __name__ == "__main__":
 
-    # Process reference and results directory
-    submit_dir = sys.argv[1]
-    truth_dir = sys.argv[2]
-
-    # Make output directory
+    # # Process reference and results directory
+    # submit_dir = sys.argv[1]
+    # truth_dir = sys.argv[2]
+    #
+    # # Make output directory
+    # output_filename = submit_dir+'_scores.txt'
+    # print('~~start evaluation~~')
+    # print('submit_dir', submit_dir)
+    # print('truth_dir', truth_dir)
+    # # Execute main program
+    # main(submit_dir, truth_dir, output_filename)
+    submit_dir = '/home/ssw/code/romp/output/R_ROMP_HRNet32_V1'
     output_filename = submit_dir+'_scores.txt'
-    print('~~start evaluation~~')
-    print('submit_dir', submit_dir)
-    print('truth_dir', truth_dir)
-    # Execute main program
+    submit_dir = '/home/ssw/code/ROMP_v1.0/output/R_ROMP_hrnet32'
+    truth_dir = '/home/ssw/code/dataset/3DPW/sequenceFiles'
     main(submit_dir, truth_dir, output_filename)

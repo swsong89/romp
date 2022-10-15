@@ -14,13 +14,13 @@ class Submit(Base):
         self._build_model_()
         self.collect_3DPW_layout()
 
-        self.loader_val = self._create_single_data_loader(dataset='pw3d',train_flag=False,split='all', mode='normal')
+        self.loader_val = self._create_single_data_loader(dataset='pw3d',train_flag=False,split='val', mode='normal')  # val batch_sampler 105 batch_size=16 pictures=1669
         self.output_dir = args().output_dir
         print('Initialization finished!')
-
+        # self.model_path = '/home/ssw/code/romp/trained_models/ROMP_HRNet32_V1.pkl'
         save_dir = os.path.join(self.output_dir, 'R_'+os.path.basename(self.model_path).replace('.pkl',''))#time.strftime("results_%Y-%m-%d_%H:%M:%S", time.localtime())
-
-        final_results_path = os.path.join(save_dir,'results.zip')
+        # '/home/ssw/code/romp/output/R_ROMP_HRNet32_V1'
+        final_results_path = os.path.join(save_dir,'results.zip')  # 'home/ssw/code/romp/output/R_ROMP_HRNet32_V1/results.zip'
         print('final results will be saved to ',final_results_path)
         if not os.path.exists(final_results_path):
             self.evaluation()
@@ -31,15 +31,15 @@ class Submit(Base):
 
     def collect_3DPW_layout(self):
         self.layout = {}
-        root_dir = os.path.join(self.pw3d_path,"sequenceFiles/")
+        root_dir = os.path.join(self.pw3d_path,"sequenceFiles/")  # '/home/ssw/code/dataset/3DPW/sequenceFiles/'
         for split in os.listdir(root_dir):
             for action in os.listdir(os.path.join(root_dir,split)):
-                action_name = action.strip('.pkl')
-                label_path = os.path.join(root_dir,split,action)
-                raw_labels = read_pickle(label_path)
+                action_name = action.strip('.pkl')  # 'downtown_arguing_00'
+                label_path = os.path.join(root_dir,split,action)  # '/home/ssw/code/dataset/3DPW/sequenceFiles/test/downtown_arguing_00.pkl'
+                raw_labels = read_pickle(label_path)  # 读取原来标注的信息
                 frame_num = len(raw_labels['img_frame_ids'])
                 subject_num = len(raw_labels['poses'])
-                self.layout[action_name] = [split, subject_num, frame_num]
+                self.layout[action_name] = [split, subject_num, frame_num]  # 这个行为数据 = 什么类型的数据集如train,test,val, 有几个人，帧的数量
 
     def set_smpl_parent_tree(self):
         parents = torch.Tensor([-1, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 9, 9, 12, 13, 14, 16,17, 18, 19, 20, 21])
@@ -75,7 +75,8 @@ class Submit(Base):
             params_pred = outputs['params']
             pose_pred = torch.cat([params_pred['global_orient'],params_pred['body_pose']],1).cpu()
             shape_pred = params_pred['betas'].cpu()
-            kp3d_smpl = outputs['joints_smpl24']
+            # kp3d_smpl = outputs['joints_smpl24']
+            kp3d_smpl = outputs['j3d']
             subject_ids = meta_data['subject_ids']
             imgpaths = meta_data['imgpath']
             
@@ -102,7 +103,7 @@ class Submit(Base):
         for imgpath in self.results:
             action_name, frame_id = imgpath.split('/')[0],int(imgpath.split('/')[1].replace('image_','').strip('.jpg'))
             for subject_id, [pose_pred, shape_pred, kp3d_smpl] in self.results[imgpath].items():
-                split, subject_num, frame_num = self.layout[action_name]
+                split, subject_num, frame_num = self.layout[action_name]  # ['validation', 1, 544] KeyError: 'downtown_bar_00'  subject_num 多少个人
                 assert frame_id<frame_num, print('frame_id {} out range'.format(frame_id))
                 assert subject_id<subject_num, print('subject_id {} out range'.format(subject_id))
                 results[split][action_name][0][int(subject_id),frame_id] = kp3d_smpl
@@ -111,16 +112,16 @@ class Submit(Base):
                 results[split][action_name][2][int(subject_id),frame_id] = params_processed
 
         print('Saving results in ',save_dir)
-        results = self.fill_empty(results)
+        # results = self.fill_empty(results)
         self.write_results(results, save_dir)
         self.zip_folder(save_dir)
 
     def fill_empty(self,results):
-        for action_name, [split, subject_num, frame_num] in self.layout.items():
+        for action_name, [split, subject_num, frame_num] in self.layout.items():  # 'downtown_bar_00'  1403 'test' 2
             for subject_id in range(subject_num):
                 missing_frame = []
                 for frame_id in range(frame_num):
-                    empty_flag = results[split][action_name][0][subject_id, frame_id,0,0] == 0
+                    empty_flag = results[split][action_name][0][subject_id, frame_id,0,0] == 0  # [splt][action_name][j3d,pose,pose_matrix][persun_id, frame_id,joint_id,0_dimension]
                     if empty_flag:
                         missing_frame.append(frame_id)
                         sampling_frame = frame_id-1 if frame_id != 0 else 1
@@ -200,9 +201,51 @@ def batch_rodrigues(rot_vecs, epsilon=1e-8, dtype=torch.float32):
 
 
 if __name__ == '__main__':
-    input_args = sys.argv[1:]
-    if sum(['configs_yml' in input_arg for input_arg in input_args])==0:
-        input_args.append("--configs_yml=configs/eval_3dpw_challenge.yml")
+    input_args = sys.argv[1:]  # [] 一个参数也没有传 # config先是import的默认参数，然后用yml中参数更新
+    if sum(['configs_yml' in input_arg for input_arg in input_args])==0:  # 如果有给active_config的话就用这个config
+        input_args.append("--configs_yml=configs/eval_3dpw_test.yml")
     with ConfigContext(parse_args(input_args)):
         print(args().configs_yml)
         submitor = Submit()
+
+    # ConfigContext = ConfigContext(parse_args(input_args))
+    # print(args().configs_yml)
+    # submitor = Submit()
+
+"""
+{'downtown_bar_00': ['test', 2, 1403], 'downtown_cafe_00': ['test', 2, 1201],
+'flat_packBags_00': ['test', 1, 1279], 'downtown_car_00': ['test', 2, 1020],
+'downtown_upstairs_00': ['test', 1, 845], 'downtown_runForBus_00': ['test', 2, 731],
+'downtown_arguing_00': ['test', 2, 898], 'downtown_enterShop_00': ['test', 1, 1449],
+'downtown_warmWelcome_00': ['test', 2, 589], 'downtown_weeklyMarket_00': ['test', 1, 1193],
+'downtown_downstairs_00': ['test', 1, 857], 'downtown_walkBridge_01': ['test', 1, 1372],
+'downtown_windowShopping_00': ['test', 1, 1948], 'downtown_rampAndStairs_00': ['test', 2, 984],
+'downtown_bus_00': ['test', 2, 2178], 'office_phoneCall_00': ['test', 2, 880],
+'downtown_stairs_00': ['test', 1, 1240], 'downtown_walkUphill_00': ['test', 1, 388],
+'downtown_crossStreets_00': ['test', 2, 588], 'outdoors_fencing_01': ['test', 1, 942],
+'downtown_walking_00': ['test', 2, 1387], 'downtown_sitOnStairs_00': ['test', 2, 1337],
+'downtown_runForBus_01': ['test', 2, 783], 'flat_guitar_01': ['test', 1, 748],
+
+
+'courtyard_goodNews_00': ['train', 2, 431], 'courtyard_relaxOnBench_01': ['train', 1, 959],
+'courtyard_giveDirections_00': ['train', 2, 848], 'outdoors_climbing_01': ['train', 1, 1062],
+'outdoors_climbing_00': ['train', 1, 1228], 'courtyard_jacket_00': ['train', 1, 1245],
+'courtyard_basketball_00': ['train', 2, 468], 'courtyard_warmWelcome_00': ['train', 2, 599],
+'courtyard_capoeira_00': ['train', 2, 435], 'courtyard_dancing_01': ['train', 2, 351],
+'courtyard_shakeHands_00': ['train', 2, 391], 'courtyard_bodyScannerMotions_00': ['train', 1, 1257],
+'courtyard_laceShoe_00': ['train', 1, 931], 'courtyard_captureSelfies_00': ['train', 2, 750],
+'outdoors_climbing_02': ['train', 1, 916], 'courtyard_rangeOfMotions_00': ['train', 2, 601],
+'courtyard_golf_00': ['train', 1, 604], 'courtyard_box_00': ['train', 1, 1041],
+'courtyard_backpack_00': ['train', 1, 1262], 'courtyard_arguing_00': ['train', 2, 765],
+'courtyard_relaxOnBench_00': ['train', 1, 558], 'outdoors_slalom_00': ['train', 1, 333],
+'outdoors_slalom_01': ['train', 1, 371], 'outdoors_freestyle_00': ['train', 1, 498],
+
+
+
+'outdoors_crosscountry_00': ['validation', 1, 544], 'courtyard_basketball_01': ['validation', 1, 958],
+'courtyard_dancing_00': ['validation', 2, 459], 'downtown_walkDownhill_00': ['validation', 1, 437],
+'courtyard_jumpBench_01': ['validation', 1, 619], 'outdoors_parcours_00': ['validation', 1, 1661],
+'outdoors_golf_00': ['validation', 1, 341], 'outdoors_freestyle_01': ['validation', 1, 273],
+'courtyard_drinking_00': ['validation', 2, 689], 'courtyard_rangeOfMotions_01': ['validation', 2, 587],
+'courtyard_hug_00': ['validation', 2, 614], 'outdoors_parcours_01': ['validation', 1, 1327]}
+"""
