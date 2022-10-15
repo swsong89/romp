@@ -6,9 +6,12 @@ demo/animation/
 demo/output/
 demo/input
 model_data/
-romp/
+#romp/
 *demo_frames*
+*demo_video_frames*
+demo_videos
 *.jpg
+*.whl
 demo/*_results*/
 active_configs/*
 #configs/*_self.yml
