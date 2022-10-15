@@ -12,6 +12,8 @@ model_data/
 demo_videos
 *.jpg
 *.whl
+output
+压缩包
 demo/*_results*/
 active_configs/*
 #configs/*_self.yml
