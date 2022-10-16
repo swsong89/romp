@@ -266,6 +266,7 @@ class ResultParser(nn.Module):
             batch_ids, flat_inds, cyxs, top_score = self.centermap_parser.parse_centermap_heatmap_adaptive_scale_batch(outputs['center_map'])
         
             if len(batch_ids)==0:
+                logging.error('number of predicted center is {}'.format(batch_ids))
                 batch_ids, flat_inds, cyxs, top_score = self.centermap_parser.parse_centermap_heatmap_adaptive_scale_batch(outputs['center_map'], top_n_people=1)
                 outputs['detection_flag'] = torch.Tensor([False for _ in range(len(batch_ids))]).cuda()
 

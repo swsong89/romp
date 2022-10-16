@@ -1,6 +1,7 @@
 import pickle
 import zipfile
 import sys, os
+import time
 sys.path.append(os.path.abspath(__file__).replace('evaluation/collect_3DPW_results.py',''))
 sys.path.append(os.path.abspath(__file__).replace('lib/evaluation/collect_3DPW_results.py',''))
 from base import *
@@ -18,7 +19,11 @@ class Submit(Base):
         self.output_dir = args().output_dir
         print('Initialization finished!')
         # self.model_path = '/home/ssw/code/romp/trained_models/ROMP_HRNet32_V1.pkl'
-        save_dir = os.path.join(self.output_dir, 'R_'+os.path.basename(self.model_path).replace('.pkl',''))#time.strftime("results_%Y-%m-%d_%H:%M:%S", time.localtime())
+
+        save_dir = os.path.join(self.output_dir, 'R_' + os.path.basename(self.model_path).replace('.pkl', ''))
+
+        # time_stamp = time.strftime('%Y-%m-%d_%H:%M:%S', time.localtime(int(round(time.time() * 1000)) / 1000))
+        # save_dir = os.path.join(self.output_dir, os.path.basename(self.model_path).replace('.pkl','') + time_stamp)#time.strftime("results_%Y-%m-%d_%H:%M:%S", time.localtime())
         # '/home/ssw/code/romp/output/R_ROMP_HRNet32_V1'
         final_results_path = os.path.join(save_dir,'results.zip')  # 'home/ssw/code/romp/output/R_ROMP_HRNet32_V1/results.zip'
         print('final results will be saved to ',final_results_path)
@@ -166,6 +171,8 @@ class Submit(Base):
     def run_official_evaluation(self, save_dir):
         print('Saving dir:', save_dir)
         os.chdir(os.path.join(config.code_dir,'evaluation'))
+        print("python pw3d_eval/evaluate.py {} {}".format(\
+            save_dir.replace(' ','\ '), os.path.join(self.pw3d_path,'sequenceFiles').replace(' ','\ ')))
         os.system("python pw3d_eval/evaluate.py {} {}".format(\
             save_dir.replace(' ','\ '), os.path.join(self.pw3d_path,'sequenceFiles').replace(' ','\ ')))
         #os.system('cp {} {}'.format(self.model_path, save_dir))

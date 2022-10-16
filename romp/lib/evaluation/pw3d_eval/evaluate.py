@@ -2,12 +2,14 @@ import os,sys
 import numpy as np
 import pickle as pkl
 import sys, os
-root_dir = os.path.join(os.path.dirname(__file__),'..')
-if root_dir not in sys.path:
-    sys.path.insert(0, root_dir)
+lib_root_dir = os.path.join(os.path.dirname(__file__),'..')  # '/home/ssw/code/romp/romp/lib/evaluation/pw3d_eval/..'  lib
+if lib_root_dir not in sys.path:
+    sys.path.insert(0, lib_root_dir)
 from pw3d_eval.SMPL import SMPL
 import glob
 import cv2
+from tqdm import tqdm
+
 
 PCK_THRESH = 50.0
 AUC_MIN = 0.0
@@ -289,13 +291,14 @@ def get_data(paths_gt, paths_pred, truth_dir):
                         'n':SMPL(center_idx=0, gender='neutral', model_root=smpl_model_path),}
 
     # construct the data structures -
-    for path_pred, path_gt in zip(paths_pred, paths_gt):
+    for i in tqdm(range(len(paths_gt))):
         seq = seq + 1
         # Open pkl files
-        data_gt = pkl.load(open(path_gt, 'rb'), encoding='latin1')  # '/home/ssw/code/dataset/3DPW/sequenceFiles/validation/courtyard_basketball_01.pkl'
-        data_pred = pkl.load(open(path_pred, 'rb'), encoding='latin1')
+        data_gt = pkl.load(open(paths_gt[i], 'rb'), encoding='latin1')  # '/home/ssw/code/dataset/3DPW/sequenceFiles/validation/courtyard_basketball_01.pkl'
+        data_pred = pkl.load(open(paths_pred[i], 'rb'), encoding='latin1')  # data_pred = {'jointPosition': [1,958,24,3], 'orientations':[1,958,9,3,3], 'smpl_params':[1,958,82]}
 
         genders = data_gt['genders']
+        print('persons: ', len(genders))
 
         for i in range(len(genders)):
 
@@ -380,10 +383,10 @@ def get_paths(submit_dir, truth_dir):
     fnames_pred = []
 
     # keys = ['train', 'validation', 'test']
-    keys = ['validation']
-    print('3dpw eval dataset: ', keys)
+    dataset_keys = ['validation']
+    print('3dpw eval dataset: ', dataset_keys)
 
-    for key in keys:
+    for key in dataset_keys:
         fnames_gt_temp = sorted(glob.glob(os.path.join(truth_dir, key, "") + "*.pkl"))
         fnames_pred_temp = sorted(glob.glob(os.path.join(submit_dir, key, "") + "*.pkl"))
         fnames_gt = fnames_gt + fnames_gt_temp
@@ -399,7 +402,9 @@ def main(submit_dir, truth_dir, output_filename):
     :param truth_dir: The location of the GT files
     :return output_filename: The location of the output txt file
     """
-
+    print('submit_dir: ', submit_dir)
+    print('truth_dir: ', truth_dir)
+    print('output_filename: ', output_filename)
     # Get all the GT and submission paths in paired list form
     fnames_gt, fnames_pred = get_paths(submit_dir, truth_dir)
 
@@ -494,7 +499,8 @@ if __name__ == "__main__":
     # # Execute main program
     # main(submit_dir, truth_dir, output_filename)
     submit_dir = '/home/ssw/code/romp/output/R_ROMP_HRNet32_V1'
-    output_filename = submit_dir+'_scores.txt'
-    submit_dir = '/home/ssw/code/ROMP_v1.0/output/R_ROMP_hrnet32'
+    # submit_dir = '/home/ssw/code/1romp/output/R_ROMP_hrnet32'
+
+    output_filename = submit_dir+'/scores.txt'
     truth_dir = '/home/ssw/code/dataset/3DPW/sequenceFiles'
     main(submit_dir, truth_dir, output_filename)
