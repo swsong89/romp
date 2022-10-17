@@ -15,7 +15,7 @@ class Submit(Base):
         self._build_model_()
         self.collect_3DPW_layout()
 
-        self.loader_val = self._create_single_data_loader(dataset='pw3d',train_flag=False,split='val', mode='normal')  # val batch_sampler 105 batch_size=16 pictures=1669
+        self.loader_val = self._create_single_data_loader(dataset='pw3d',train_flag=False,split=args().dataset_split, mode='normal')  # val batch_sampler 105 batch_size=16 pictures=1669
         self.output_dir = args().output_dir
         print('Initialization finished!')
         # self.model_path = '/home/ssw/code/romp/trained_models/ROMP_HRNet32_V1.pkl'
@@ -24,7 +24,6 @@ class Submit(Base):
 
         # time_stamp = time.strftime('%Y-%m-%d_%H:%M:%S', time.localtime(int(round(time.time() * 1000)) / 1000))
         # save_dir = os.path.join(self.output_dir, os.path.basename(self.model_path).replace('.pkl','') + time_stamp)#time.strftime("results_%Y-%m-%d_%H:%M:%S", time.localtime())
-        # '/home/ssw/code/romp/output/R_ROMP_HRNet32_V1'
         final_results_path = os.path.join(save_dir,'results.zip')  # 'home/ssw/code/romp/output/R_ROMP_HRNet32_V1/results.zip'
         print('final results will be saved to ',final_results_path)
         if not os.path.exists(final_results_path):

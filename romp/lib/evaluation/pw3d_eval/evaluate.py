@@ -2,15 +2,24 @@ import os,sys
 import numpy as np
 import pickle as pkl
 import sys, os
-lib_root_dir = os.path.join(os.path.dirname(__file__),'..')  # '/home/ssw/code/romp/romp/lib/evaluation/pw3d_eval/..'  lib
-if lib_root_dir not in sys.path:
-    sys.path.insert(0, lib_root_dir)
+evaluation_dir = os.path.join(os.path.dirname(__file__),'..')  # '/home/ssw/code/romp/romp/lib/evaluation/pw3d_eval/..'  lib
+if evaluation_dir not in sys.path:
+    sys.path.insert(0, evaluation_dir)
+lib_dir = evaluation_dir = os.path.join(evaluation_dir,'..')  # '/home/ssw/code/romp/romp/lib/'  lib
+if lib_dir not in sys.path:
+    sys.path.insert(0, lib_dir)
+
 from pw3d_eval.SMPL import SMPL
 import glob
 import cv2
 from tqdm import tqdm
+# import config
+# from config import args, parse_args, ConfigContext
 
 
+set_names = {'all':['train','validation','test'],'test':['test'],'val':['validation']}
+
+evaluation_keys = set_names[args().dataset_split]
 PCK_THRESH = 50.0
 AUC_MIN = 0.0
 AUC_MAX = 200.0
@@ -258,7 +267,7 @@ def check_valid_inds(poses2d, camposes_valid):
     return indices
 
 
-def get_data(paths_gt, paths_pred, truth_dir):
+def get_data(paths_gt, paths_pred):
     """
     The function reads all the ground truth and prediction files. And concatenates
 
@@ -383,10 +392,10 @@ def get_paths(submit_dir, truth_dir):
     fnames_pred = []
 
     # keys = ['train', 'validation', 'test']
-    dataset_keys = ['validation']
-    print('3dpw eval dataset: ', dataset_keys)
+    # evaluation_keys = ['validation']
 
-    for key in dataset_keys:
+
+    for key in evaluation_keys:
         fnames_gt_temp = sorted(glob.glob(os.path.join(truth_dir, key, "") + "*.pkl"))
         fnames_pred_temp = sorted(glob.glob(os.path.join(submit_dir, key, "") + "*.pkl"))
         fnames_gt = fnames_gt + fnames_gt_temp
@@ -405,13 +414,14 @@ def main(submit_dir, truth_dir, output_filename):
     print('submit_dir: ', submit_dir)
     print('truth_dir: ', truth_dir)
     print('output_filename: ', output_filename)
+    print('evaluation_keys: {}'.format(evaluation_keys))
     # Get all the GT and submission paths in paired list form
     fnames_gt, fnames_pred = get_paths(submit_dir, truth_dir)
 
     print('geting data')
     # Get all the ground-truth and submission joint positions
     # Get all the ground-truth and submission Global rotation matrices
-    jp_pred, jp_gt, mats_pred, mats_gt = get_data(fnames_gt, fnames_pred, truth_dir)
+    jp_pred, jp_gt, mats_pred, mats_gt = get_data(fnames_gt, fnames_pred)
 
     # Check if the predicted and GT joints have the same number
     assert jp_pred.shape == jp_gt.shape
@@ -478,7 +488,7 @@ def main(submit_dir, truth_dir, output_filename):
     for err in errs.keys():
         if not errs[err] == np.inf:
             str = str + err + ': {}\n'.format(errs[err])
-
+    str += '{}'.format(evaluation_keys)
     print(str)
     with open(output_filename, 'w') as f:
         f.write(str)
@@ -498,9 +508,27 @@ if __name__ == "__main__":
     # print('truth_dir', truth_dir)
     # # Execute main program
     # main(submit_dir, truth_dir, output_filename)
-    submit_dir = '/home/ssw/code/romp/output/R_ROMP_HRNet32_V1'
-    # submit_dir = '/home/ssw/code/1romp/output/R_ROMP_hrnet32'
+    # submit_dir = '/home/ssw/code/romp/output/R_ROMP_HRNet32_V1'
+    # # submit_dir = '/home/ssw/code/1romp/output/R_ROMP_hrnet32'
 
-    output_filename = submit_dir+'/scores.txt'
-    truth_dir = '/home/ssw/code/dataset/3DPW/sequenceFiles'
-    main(submit_dir, truth_dir, output_filename)
+    # output_filename = submit_dir+'/scores.txt'
+    # truth_dir = '/home/ssw/code/dataset/3DPW/sequenceFiles'
+    # submit_dir = '/data2/2020/ssw/romp/output/R_ROMP_HRNet32_V1'
+    # root_dir = '/home/ssw/code'
+    # # root_dir = '/data2/2020/ssw'
+    #
+    #
+    #
+    # submit_dir = root_dir + '/romp/output/R_ROMP_HRNet32_V1'
+    # output_filename = submit_dir+ '/scores.txt'
+    # truth_dir = root_dir + '/dataset/3DPW/sequenceFiles'
+    #
+    submit_dir = sys.argv[1]
+    truth_dir = sys.argv[2]
+    output_filename = submit_dir + '/scores.txt'
+
+    input_args = sys.argv[3:]  # [] 加入一个参数 dataset_split
+    # if sum(['configs_yml' in input_arg for input_arg in input_args])==0:  # 如果有给active_config的话就用这个config
+    #     input_args.append("--configs_yml=configs/eval_3dpw_test_r9000p.yml")
+    with ConfigContext(parse_args(input_args)):
+        main(submit_dir, truth_dir, output_filename)

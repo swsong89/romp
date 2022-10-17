@@ -13,6 +13,8 @@ code_dir = currentfile.replace('config.py','')  # '/home/ssw/code/romp/romp/lib/
 project_dir = currentfile.replace(os.path.sep+os.path.join('romp', 'lib', 'config.py'), '') # '/home/ssw/code/romp'
 source_dir = currentfile.replace(os.path.sep+os.path.join('lib', 'config.py'), '')  # '/home/ssw/code/romp/romp'
 root_dir = project_dir.replace(project_dir.split(os.path.sep)[-1], '')  # '/home/ssw/code/'
+print('root_dir', root_dir)
+print('output_dir', os.path.join(project_dir, 'output/'))
 
 time_stamp = time.strftime('%Y-%m-%d_%H:%M:%S',time.localtime(int(round(time.time()*1000))/1000))
 yaml_timestamp = os.path.abspath(os.path.join(project_dir, 'active_configs' + os.sep + "active_context_{}.yaml".format(time_stamp).replace(":","_")))
@@ -29,10 +31,10 @@ def parse_args(input_args=None):  # ['--configs_yml=configs/eval_3dpw_test.yml']
 
     parser = argparse.ArgumentParser(description = 'ROMP: Monocular, One-stage, Regression of Multiple 3D People')
     parser.add_argument('--tab', type = str, default = 'ROMP_v1', help = 'additional tabs')
-    parser.add_argument('--configs_yml', type = str, default = os.path.join(project_dir,'configs/eval_3dpw_test.yml'), help = 'settings')
+    parser.add_argument('--configs_yml', type = str, default = os.path.join(project_dir,'configs/eval_3dpw_test_r9000p.yml'), help = 'settings')
     # parser.add_argument('--configs_yml', type = str, default = os.path.join(project_dir,'configs/v1.yml'), help = 'settings')
     parser.add_argument('--inputs', type = str, help = 'path to inputs') 
-    parser.add_argument('--output_dir', type = str, default='/home/ssw/code/romp/output', help = 'path to save outputs')
+    parser.add_argument('--output_dir', type=str, default=os.path.join(project_dir, 'output/'), help='path to save outputs')
     parser.add_argument('--interactive_vis',action='store_true',help = 'whether to show the results in an interactive mode')
     parser.add_argument('--show_largest_person_only',action='store_true',help = 'whether to only show the results of the largest person in the image')
     parser.add_argument('--show_mesh_stand_on_image',action='store_true',help = 'whether to show the estimated meshes standing on the image')
@@ -149,7 +151,7 @@ def parse_args(input_args=None):  # ['--configs_yml=configs/eval_3dpw_test.yml']
     # basic log settings
     log_group.add_argument('--print_freq', type = int, default = 50, help = 'training epochs')
     log_group.add_argument('--model_path',type = str,default = os.path.join(project_dir,'trained_models', 'ROMP_HRNet32_V1.pkl'),help = 'trained model path')
-    log_group.add_argument('--log-path', type = str, default = os.path.join(root_dir,'log/'), help = 'Path to save log file')
+    log_group.add_argument('--log-path', type = str, default = os.path.join(project_dir,'log/'), help = 'Path to save log file')
 
     hm_ae_group = parser.add_argument_group(title='learning 2D pose/associate embeddings options')
     hm_ae_group.add_argument('--learn_2dpose', type = bool,default = False)
@@ -173,7 +175,8 @@ def parse_args(input_args=None):  # ['--configs_yml=configs/eval_3dpw_test.yml']
     dataset_group.add_argument('--max_person',default=64,type=int,help = 'max person number of each image')
     dataset_group.add_argument('--homogenize_pose_space',type = bool,default = False,help = 'whether to homogenize the pose space of 3D datasets')
     dataset_group.add_argument('--use_eft', type=bool, default=True,help = 'wether use eft annotations for training')
-    
+    dataset_group.add_argument('--dataset_split', type=str, default='test',help = 'split method')
+
     smpl_group = parser.add_argument_group(title='SMPL options')
     smpl_group.add_argument('--smpl_mesh_root_align',type = bool,default =True)
     smpl_group.add_argument('--Rot_type', type=str, default='6D', help='rotation representation type: angular, 6D')
