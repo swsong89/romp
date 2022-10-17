@@ -1,6 +1,5 @@
 """
 
-
 CUDA_VISIBLE_DEVICES=0 python romp/lib/evaluation/collect_3DPW_results.py --configs_yml=configs/eval_3dpw_test.yml
 
 https://github.com/Arthur151/ROMP#train
@@ -18,5 +17,3 @@ python romp/lib/evaluation/pw3d_eval/evaluate.py --dataset_split='val'
 
 
 """
-
-
