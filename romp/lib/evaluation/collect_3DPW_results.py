@@ -170,10 +170,10 @@ class Submit(Base):
     def run_official_evaluation(self, save_dir):
         print('Saving dir:', save_dir)
         os.chdir(os.path.join(config.code_dir,'evaluation'))
-        print("python pw3d_eval/evaluate.py {} {}".format(\
-            save_dir.replace(' ','\ '), os.path.join(self.pw3d_path,'sequenceFiles').replace(' ','\ ')))
-        os.system("python pw3d_eval/evaluate.py {} {}".format(\
-            save_dir.replace(' ','\ '), os.path.join(self.pw3d_path,'sequenceFiles').replace(' ','\ ')))
+        print("python pw3d_eval/evaluate.py {} {} {} ".format(\
+            save_dir.replace(' ','\ '), os.path.join(self.pw3d_path,'sequenceFiles').replace(' ','\ '), args().dataset_split))
+        os.system("python pw3d_eval/evaluate.py  {} {} {} ".format(\
+            save_dir.replace(' ','\ '), os.path.join(self.pw3d_path,'sequenceFiles').replace(' ','\ '), args().dataset_split))
         #os.system('cp {} {}'.format(self.model_path, save_dir))
 
 def read_pickle(file_path):

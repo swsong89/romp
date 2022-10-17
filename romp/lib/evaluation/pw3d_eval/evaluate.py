@@ -18,8 +18,8 @@ from tqdm import tqdm
 
 
 set_names = {'all':['train','validation','test'],'test':['test'],'val':['validation']}
+evaluation_keys = ['train','validation','test']
 
-evaluation_keys = set_names[args().dataset_split]
 PCK_THRESH = 50.0
 AUC_MIN = 0.0
 AUC_MAX = 200.0
@@ -405,7 +405,7 @@ def get_paths(submit_dir, truth_dir):
     return sorted(fnames_gt), sorted(fnames_pred)
 
 
-def main(submit_dir, truth_dir, output_filename):
+def main(submit_dir, truth_dir, output_filename, dataset_split):
     """
     :param submit_dir: The location of the submission files
     :param truth_dir: The location of the GT files
@@ -414,6 +414,9 @@ def main(submit_dir, truth_dir, output_filename):
     print('submit_dir: ', submit_dir)
     print('truth_dir: ', truth_dir)
     print('output_filename: ', output_filename)
+    global evaluation_keys
+    evaluation_keys = set_names[dataset_split]
+    
     print('evaluation_keys: {}'.format(evaluation_keys))
     # Get all the GT and submission paths in paired list form
     fnames_gt, fnames_pred = get_paths(submit_dir, truth_dir)
@@ -515,20 +518,28 @@ if __name__ == "__main__":
     # truth_dir = '/home/ssw/code/dataset/3DPW/sequenceFiles'
     # submit_dir = '/data2/2020/ssw/romp/output/R_ROMP_HRNet32_V1'
     # root_dir = '/home/ssw/code'
-    # # root_dir = '/data2/2020/ssw'
-    #
-    #
-    #
+    # root_dir = '/data2/2020/ssw/123'
+    # #
+    # #
+    # #
     # submit_dir = root_dir + '/romp/output/R_ROMP_HRNet32_V1'
     # output_filename = submit_dir+ '/scores.txt'
     # truth_dir = root_dir + '/dataset/3DPW/sequenceFiles'
-    #
+
     submit_dir = sys.argv[1]
     truth_dir = sys.argv[2]
-    output_filename = submit_dir + '/scores.txt'
+    output_filename = submit_dir + '_scores.txt'
+    dataset_split = sys.argv[3]
+    main(submit_dir, truth_dir, output_filename, dataset_split)
 
-    input_args = sys.argv[3:]  # [] 加入一个参数 dataset_split
-    # if sum(['configs_yml' in input_arg for input_arg in input_args])==0:  # 如果有给active_config的话就用这个config
-    #     input_args.append("--configs_yml=configs/eval_3dpw_test_r9000p.yml")
-    with ConfigContext(parse_args(input_args)):
-        main(submit_dir, truth_dir, output_filename)
+    #
+    # print('123')
+    # submit_dir = sys.argv[1]
+    # truth_dir = sys.argv[2]
+    # output_filename = submit_dir + '/scores.txt'
+
+    # input_args = sys.argv[3:]  # [] 加入一个参数 dataset_split
+    # # if sum(['configs_yml' in input_arg for input_arg in input_args])==0:  # 如果有给active_config的话就用这个config
+    # #     input_args.append("--configs_yml=configs/eval_3dpw_test_r9000p.yml")
+    # with ConfigContext(parse_args(input_args)):
+    #     main(submit_dir, truth_dir, output_filename)
