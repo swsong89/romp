@@ -116,7 +116,7 @@ class Submit(Base):
                 results[split][action_name][2][int(subject_id),frame_id] = params_processed
 
         print('Saving results in ',save_dir)
-        # results = self.fill_empty(results)
+        results = self.fill_empty(results)
         self.write_results(results, save_dir)
         self.zip_folder(save_dir)
 

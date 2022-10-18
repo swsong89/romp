@@ -175,7 +175,7 @@ def parse_args(input_args=None):  # ['--configs_yml=configs/eval_3dpw_test.yml']
     dataset_group.add_argument('--max_person',default=64,type=int,help = 'max person number of each image')
     dataset_group.add_argument('--homogenize_pose_space',type = bool,default = False,help = 'whether to homogenize the pose space of 3D datasets')
     dataset_group.add_argument('--use_eft', type=bool, default=True,help = 'wether use eft annotations for training')
-    dataset_group.add_argument('--dataset_split', type=str, default='test',help = 'split method')
+    dataset_group.add_argument('--dataset_split', type=str, default='all',help = 'split method')
 
     smpl_group = parser.add_argument_group(title='SMPL options')
     smpl_group.add_argument('--smpl_mesh_root_align',type = bool,default =True)
@@ -251,7 +251,6 @@ class ConfigContext(object):
     def __init__(self, parsed_args=None):
         if parsed_args is not None:
             self.parsed_args = parsed_args
-            print('123: ', self.parsed_args.tab)
 
     def __enter__(self):
         # if a yaml is left over here, remove it

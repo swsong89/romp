@@ -18,7 +18,6 @@ from tqdm import tqdm
 
 
 set_names = {'all':['train','validation','test'],'test':['test'],'val':['validation']}
-evaluation_keys = ['train','validation','test']
 
 PCK_THRESH = 50.0
 AUC_MIN = 0.0
@@ -290,8 +289,8 @@ def get_data(paths_gt, paths_pred):
     # all predicted rotations matrices
     all_glob_rot_preds = []
 
-    seq = 0
-    num_jps_pred = 0
+    seq = 0  # 视频片段数
+    num_jps_pred = 0  # 所有视频片段人检测人的数量
     num_ors_pred = 0
     num_params_pred = 0
 
@@ -380,7 +379,7 @@ def get_data(paths_gt, paths_pred):
     return (all_jp_preds, all_jp_gts, all_glob_rot_preds, all_glob_rot_gts)
 
 
-def get_paths(submit_dir, truth_dir):
+def get_paths(submit_dir, truth_dir, evaluation_keys):
     """
     submit_dir: The location of the submit directory
     truth_dir: The location of the truth directory
@@ -390,10 +389,6 @@ def get_paths(submit_dir, truth_dir):
     """
     fnames_gt = []
     fnames_pred = []
-
-    # keys = ['train', 'validation', 'test']
-    # evaluation_keys = ['validation']
-
 
     for key in evaluation_keys:
         fnames_gt_temp = sorted(glob.glob(os.path.join(truth_dir, key, "") + "*.pkl"))
@@ -414,12 +409,11 @@ def main(submit_dir, truth_dir, output_filename, dataset_split):
     print('submit_dir: ', submit_dir)
     print('truth_dir: ', truth_dir)
     print('output_filename: ', output_filename)
-    global evaluation_keys
     evaluation_keys = set_names[dataset_split]
     
     print('evaluation_keys: {}'.format(evaluation_keys))
     # Get all the GT and submission paths in paired list form
-    fnames_gt, fnames_pred = get_paths(submit_dir, truth_dir)
+    fnames_gt, fnames_pred = get_paths(submit_dir, truth_dir, evaluation_keys)
 
     print('geting data')
     # Get all the ground-truth and submission joint positions
@@ -487,11 +481,10 @@ def main(submit_dir, truth_dir, output_filename, dataset_split):
         'PVE': PVE,
     }
 
-    str = ''
+    str = '{}\n'.format(evaluation_keys)
     for err in errs.keys():
         if not errs[err] == np.inf:
             str = str + err + ': {}\n'.format(errs[err])
-    str += '{}'.format(evaluation_keys)
     print(str)
     with open(output_filename, 'w') as f:
         f.write(str)
@@ -528,8 +521,9 @@ if __name__ == "__main__":
 
     submit_dir = sys.argv[1]
     truth_dir = sys.argv[2]
-    output_filename = submit_dir + '_scores.txt'
     dataset_split = sys.argv[3]
+
+    output_filename = submit_dir + '/' + dataset_split + '_scores.txt'
     main(submit_dir, truth_dir, output_filename, dataset_split)
 
     #

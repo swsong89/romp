@@ -4,8 +4,8 @@ ARGS:
  GPUS: 0
  model_version: 1
  
- val_batch_size: 16
- nw_eval: 2
+ val_batch_size: 128
+ nw_eval: 4
  eval: True
  collision_aware_centermap: False
  collision_factor: 0.2
@@ -18,5 +18,8 @@ ARGS:
  smpl_mesh_root_align: False
 
  model_path: trained_models/ROMP_HRNet32_V1.pkl
- dataset_rootdir: "/media/yusun/Extreme SSD/dataset" #'/path/to/folder that contains 3DPW dataset'
- output_dir: '/media/yusun/Extreme SSD/ROMP/results/' #'/path/to/vibe_db where 3dpw_test_db.pt located'
+ dataset_split: 'all'
+#  dataset_rootdir: "/media/yusun/Extreme SSD/dataset" #'/path/to/folder that contains 3DPW dataset'
+#  output_dir: '/media/yusun/Extreme SSD/ROMP/results/' #'/path/to/vibe_db where 3dpw_test_db.pt located'
+
+#  结果应该是Table1 ROMP (HRNet-32)⋆ 82.7 60.5 36.5 59.7 20.5 18.9
