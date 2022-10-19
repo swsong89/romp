@@ -8,7 +8,7 @@ from models.romp_model import ROMP
 from models.bev_model import BEV
 
 Backbones = {'hrnet': HigherResolutionNet, 'resnet': ResNet_50}
-Heads = {1: ROMP, 6:BEV}
+Heads = {1: ROMP, 6:BEV}  # model_version 1 romp 6 bev
 
 def build_model():
     if args().backbone in Backbones:
@@ -16,7 +16,7 @@ def build_model():
     else:
         raise NotImplementedError("Backbone is not recognized")
     if args().model_version in Heads:
-        head = Heads[args().model_version]
+        head = Heads[args().model_version]  # romp模型
     else:
         raise NotImplementedError("Head is not recognized")
     model = head(backbone=backbone)

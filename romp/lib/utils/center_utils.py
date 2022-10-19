@@ -16,10 +16,10 @@ def denormalize_center(center, size=args().centermap_size):
     return center
 
 def process_gt_center(center_normed):
-    valid_mask = center_normed[:,:,0]>-1
+    valid_mask = center_normed[:,:,0]>-1  # center_normed[0] = [[-0.2549,-0.1257],[-2,-2],...]
     valid_inds = torch.where(valid_mask)
-    valid_batch_inds, valid_person_ids = valid_inds[0], valid_inds[1]
-    center_gt = ((center_normed+1)/2*args().centermap_size).long()
+    valid_batch_inds, valid_person_ids = valid_inds[0], valid_inds[1]  # valid_batch_inds=16人,16人都是0即第一个位置
+    center_gt = ((center_normed+1)/2*args().centermap_size).long()  # center_normed[0]= [[23,27], [-32,-32],...]
     center_gt_valid = center_gt[valid_mask]
     return (valid_batch_inds, valid_person_ids, center_gt_valid)
 

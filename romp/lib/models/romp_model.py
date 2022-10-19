@@ -33,20 +33,20 @@ class ROMP(Base):
             self.init_weights()
             self.backbone.load_pretrain_params()
 
-    def head_forward(self,x):
+    def head_forward(self,x):  # x HRNet提取特征[16,32,128,128]
         #generate heatmap (K) + associate embedding (K)
         #kp_heatmap_ae = self.final_layers[0](x)
-        x = torch.cat((x, self.coordmaps.to(x.device).repeat(x.shape[0],1,1,1)), 1)
-
-        params_maps = self.final_layers[1](x)
-        center_maps = self.final_layers[2](x)
-        if args().merge_smpl_camera_head:
+        x = torch.cat((x, self.coordmaps.to(x.device).repeat(x.shape[0],1,1,1)), 1)  # coordmaps [1,2,128,128] -> [16,2,128,128]
+        # x p16,34,128,128]
+        params_maps = self.final_layers[1](x)  # [16,142,64,64]  142= 22*6+10
+        center_maps = self.final_layers[2](x)  # [16,1,64,64]
+        if args().merge_smpl_camera_head:  # false
             cam_maps, params_maps = params_maps[:,:3], params_maps[:,3:]
-        else:
-            cam_maps = self.final_layers[3](x)
+        else:  # false就是分开预测params和camera,否则的话params应该是145=142+3camera
+            cam_maps = self.final_layers[3](x)  # [16,3,64,64]
         # to make sure that scale is always a positive value
-        cam_maps[:, 0] = torch.pow(1.1,cam_maps[:, 0])
-        params_maps = torch.cat([cam_maps, params_maps], 1)
+        cam_maps[:, 0] = torch.pow(1.1,cam_maps[:, 0])  # 3坐标应该是z,x,y
+        params_maps = torch.cat([cam_maps, params_maps], 1)  # [16,145,64,64]
         output = {'params_maps':params_maps.float(), 'center_map':center_maps.float()} #, 'kp_ae_maps':kp_heatmap_ae.float()
         return output
 

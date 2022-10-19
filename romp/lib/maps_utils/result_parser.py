@@ -30,7 +30,7 @@ class ResultParser(nn.Module):
         self.centermap_parser = CenterMap()
         self.match_preds_to_gts_for_supervision = args().match_preds_to_gts_for_supervision
 
-    def matching_forward(self, outputs, meta_data, cfg):
+    def matching_forward(self, outputs, meta_data, cfg):  # output={'params_maps':[16,145,64,64],'center_map':[16,1,64,64]
         if args().model_version in [6,8,9]:
             outputs,meta_data = self.match_params_new(outputs, meta_data, cfg)
         else:
@@ -191,7 +191,7 @@ class ResultParser(nn.Module):
         gt_keys = ['params', 'full_kp2d', 'kp_3d', 'subject_ids', 'valid_masks']
         exclude_keys = ['heatmap','centermap','AE_joints','person_centers','all_person_detected_mask']
 
-        center_gts_info = process_gt_center(meta_data['person_centers'])
+        center_gts_info = process_gt_center(meta_data['person_centers'])  # ([16], [16], [16,2])分别对应的是有人的帧序号，相应帧人序号，相应人坐标
         center_preds_info = self.centermap_parser.parse_centermap(outputs['center_map'])
         mc_centers = self.match_gt_pred(center_gts_info, center_preds_info, outputs['center_map'].device, cfg['is_training'])
         batch_ids, flat_inds, person_ids = mc_centers['batch_ids'], mc_centers['flat_inds'], mc_centers['person_ids']

@@ -21,7 +21,7 @@ default_cfg = {'mode':'val', 'calc_loss': False}
 
 class Base(nn.Module):
     def forward(self, meta_data, **cfg):
-        if cfg['mode'] == 'matching_gts':
+        if cfg['mode'] == 'matching_gts':  # cfg {'mode': 'matching_gts', 'is_training': False, 'calc_loss': False, 'with_nms': False, 'with_2d_matching': True}
             return self.matching_forward(meta_data, **cfg)
         elif cfg['mode'] == 'parsing':
             return self.parsing_forward(meta_data, **cfg)
@@ -36,7 +36,7 @@ class Base(nn.Module):
                 outputs = self.feed_forward(meta_data)
                 outputs, meta_data = self._result_parser.matching_forward(outputs, meta_data, cfg)
         else:
-            outputs = self.feed_forward(meta_data)
+            outputs = self.feed_forward(meta_data)  # output={'params_maps':[16,145,64,64],'center_map':[16,1,64,64]
             outputs, meta_data = self._result_parser.matching_forward(outputs, meta_data, cfg)
 
         outputs['meta_data'] = meta_data
@@ -59,9 +59,9 @@ class Base(nn.Module):
         #print_dict(outputs)
         return outputs
 
-    def feed_forward(self, meta_data):
-        x = self.backbone(meta_data['image'].contiguous().cuda())
-        outputs = self.head_forward(x)
+    def feed_forward(self, meta_data):  # 数据信息
+        x = self.backbone(meta_data['image'].contiguous().cuda())  # x [16,32,128,128]经过HRNet特征提取
+        outputs = self.head_forward(x)  # output={'params_maps':[16,145,64,64],'center_map':[16,1,64,64]
         return outputs
 
     @torch.no_grad()

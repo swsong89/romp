@@ -146,7 +146,7 @@ def print_dict(dt):
             print(key, value)
     print('-'*20)
 
-def get_remove_keys(dt, keys=[]):
+def get_remove_keys(dt, keys=[]):  # keys={'data_set', 'imgpath'} 去除这两项数据
     targets = []
     for key in keys:
         targets.append(dt[key])

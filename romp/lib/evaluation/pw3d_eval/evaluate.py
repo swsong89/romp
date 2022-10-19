@@ -2,6 +2,7 @@ import os,sys
 import numpy as np
 import pickle as pkl
 import sys, os
+import time
 evaluation_dir = os.path.join(os.path.dirname(__file__),'..')  # '/home/ssw/code/romp/romp/lib/evaluation/pw3d_eval/..'  lib
 if evaluation_dir not in sys.path:
     sys.path.insert(0, evaluation_dir)
@@ -306,7 +307,7 @@ def get_data(paths_gt, paths_pred):
         data_pred = pkl.load(open(paths_pred[i], 'rb'), encoding='latin1')  # data_pred = {'jointPosition': [1,958,24,3], 'orientations':[1,958,9,3,3], 'smpl_params':[1,958,82]}
 
         genders = data_gt['genders']
-        print('persons: ', len(genders))
+        print('         persons: ', len(genders))
 
         for i in range(len(genders)):
 
@@ -481,21 +482,34 @@ def main(submit_dir, truth_dir, output_filename, dataset_split):
         'PVE': PVE,
     }
 
-    str = '{}\n'.format(evaluation_keys)
+    time_stamp = time.strftime('%Y-%m-%d_%H:%M:%S', time.localtime(int(round(time.time() * 1000)) / 1000))
+    str = '\n' + time_stamp + '\n'
+    str += '3DPW {}\n'.format(evaluation_keys)
     for err in errs.keys():
         if not errs[err] == np.inf:
-            str = str + err + ': {}\n'.format(errs[err])
+            str = str + err + ': %.3f\n' %(errs[err])
     print(str)
-    with open(output_filename, 'w') as f:
+    with open(output_filename, 'a') as f:  # 'w'参数是直接写，没有的话创建写，有的话覆盖，a是在后面附加,r是读
         f.write(str)
     f.close()
 
 
 if __name__ == "__main__":
 
-    # # Process reference and results directory
+    root_dir = '/home/ssw/code'
+    # root_dir = '/data2/2020/ssw/123'
+
+    dataset_split = 'test'
+    submit_dir = root_dir + '/romp/output/R_ROMP_HRNet32_V1_ft_3DPW'  # R_ROMP_ResNet50_V1  R_ROMP_HRNet32_V1 R_ROMP_ResNet50_V1_ft_3DPW
+    truth_dir = root_dir + '/dataset/3DPW/sequenceFiles'
+
     # submit_dir = sys.argv[1]
     # truth_dir = sys.argv[2]
+    # dataset_split = sys.argv[3]
+
+    output_filename = submit_dir + '/' + dataset_split + '_scores.txt'
+    main(submit_dir, truth_dir, output_filename, dataset_split)
+
     #
     # # Make output directory
     # output_filename = submit_dir+'_scores.txt'
@@ -527,6 +541,7 @@ if __name__ == "__main__":
     main(submit_dir, truth_dir, output_filename, dataset_split)
 
     #
+
     # print('123')
     # submit_dir = sys.argv[1]
     # truth_dir = sys.argv[2]

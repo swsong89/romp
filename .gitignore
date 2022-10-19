@@ -1,19 +1,11 @@
 trained_models/
-models/
-demo/videos/
-demo/animation/
-demo/output/
-demo/input
+demo
 model_data/
+
 #romp/
-*demo_frames*
-*demo_video_frames*
-demo_videos
-*.jpg
 *.whl
 output
 压缩包
-demo/*_results*/
 active_configs/*
 #configs/*_self.yml
 build/
@@ -25,8 +17,7 @@ log/*
 .idea/
 env_romp.tar.gz
 zip
-active_configs/*
 
 # service
-env_romp
+
 #123
