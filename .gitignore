@@ -1,12 +1,17 @@
 trained_models/
 demo
 model_data/
+压缩包
+output/*/train
+output/*/test
+output/*/validation
+output/*/results.zip
+
+
+
+
 
 #romp/
-*.whl
-output
-压缩包
-active_configs/*
 #configs/*_self.yml
 build/
 dist/
@@ -15,8 +20,7 @@ dist/
 __pycache__/
 log/*
 .idea/
-env_romp.tar.gz
-zip
+
 
 # service
 
