@@ -135,7 +135,7 @@ class Base(object):
         else:
             return DataLoader(dataset = datasets,\
                 batch_size = batch_size, shuffle = True, \
-                drop_last = True if train_flag else False, pin_memory = True,num_create_single_data_loader_workers = self.nw)
+                drop_last = True if train_flag else False, pin_memory = True,num_workers = self.nw)
 
     def _create_single_data_loader(self, shuffle=False, drop_last=False, **kwargs):
         logging.info('gathering single image datasets.')

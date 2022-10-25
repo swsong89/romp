@@ -1,3 +1,7 @@
+import os,sys
+sys.path.insert(0, '../')
+import os.path as osp
+
 from config import args
 from collections import OrderedDict
 from dataset.image_base import *
@@ -59,7 +63,7 @@ def H36M(base_class=default_mode):
         def load_file_list(self):
             self.file_paths = []
             self.annots = np.load(self.annots_file, allow_pickle=True)['annots'][()]
-
+            # print('Loading h36m annots: ', self.annots)
             with open(self.imgs_list_file) as f:
                 test_list = f.readlines()
             
@@ -96,6 +100,8 @@ def H36M(base_class=default_mode):
             root_trans = info['kp3d_mono'].reshape(-1,3)[[constants.H36M_32['R_Hip'], constants.H36M_32['L_Hip']]].mean(0)[None]
 
             imgpath = os.path.join(self.image_folder,img_name)
+            assert osp.exists(imgpath), 'h36m Path {} does not exist!'.format(
+                imgpath)
             image = cv2.imread(imgpath)[:,:,::-1]
             kp2d = self.map_kps(info['kp2d'].reshape(-1,2).copy(),maps=self.joint_mapper)
             kp2ds = np.concatenate([kp2d,self.kps_vis],1)[None]

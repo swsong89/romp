@@ -1,0 +1,23 @@
+test
+
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] = 0.131
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets= 20 ] = 0.326
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets= 20 ] = 0.082
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] = 0.302
+ Average Recall     (AR) @[ IoU=0.50      | area=   all | maxDets= 20 ] = 0.569
+ Average Recall     (AR) @[ IoU=0.75      | area=   all | maxDets= 20 ] = 0.283
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=  easy | maxDets= 20 ] = -1.000
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets= 20 ] = 0.034
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=  hard | maxDets= 20 ] = -1.000
+
+ val
+
+Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] = 0.128
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets= 20 ] = 0.321
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets= 20 ] = 0.082
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] = 0.300
+ Average Recall     (AR) @[ IoU=0.50      | area=   all | maxDets= 20 ] = 0.566
+ Average Recall     (AR) @[ IoU=0.75      | area=   all | maxDets= 20 ] = 0.282
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=  easy | maxDets= 20 ] = -1.000
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets= 20 ] = 0.052
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=  hard | maxDets= 20 ] = -1.000

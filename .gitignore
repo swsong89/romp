@@ -6,7 +6,9 @@ output/*/train
 output/*/test
 output/*/validation
 output/*/results.zip
-
+active_configs/*
+*.zip
+*.c
 
 
 
@@ -21,7 +23,12 @@ __pycache__/
 log/*
 .idea/
 
+*.json
+
 
 # service
 
-#123
+#r9000p
+deom_videos
+env_romp.tar.gz
+zip

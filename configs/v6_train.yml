@@ -1,6 +1,6 @@
 ARGS:
  tab: 'V6_hrnet_relative_train'
- dataset: h36m,muco,coco,lsp,agora,pw3d,relative_human,posetrack
+ dataset: muco,lsp,agora,pw3d,relative_human
  eval_datasets: 'relative,agora'
  gpu: 0
  distributed_training: False
@@ -23,8 +23,8 @@ ARGS:
  add_depth_encoding: True
 
  master_batch_size: -1
- val_batch_size: 16
- batch_size: 32 # 64
+ val_batch_size: 8
+ batch_size: 8 # 64
  nw: 4
  nw_eval: 2
  lr: 0.00005
@@ -66,11 +66,11 @@ loss_weight:
   R_Depth: 400.
 
 sample_prob:
-  h36m: 0.14
-  muco: 0.14
-  coco: 0.12
-  lsp: 0.06
+#  h36m: 0.14
+  muco: 0.28
+#  coco: 0.12
+  lsp: 0.18
   agora: 0.14
   pw3d: 0.14
-  relative_human: 0.16
-  posetrack: 0.1
+  relative_human: 0.26
+#  posetrack: 0.1

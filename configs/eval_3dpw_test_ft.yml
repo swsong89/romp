@@ -9,7 +9,7 @@ ARGS:
  eval: True
  collision_aware_centermap: False
  collision_factor: 0.2
- calc_PVE_error: False
+ calc_PVE_error: True
 
  backbone: 'hrnet'
  centermap_size: 64

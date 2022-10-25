@@ -6,11 +6,14 @@ ARGS:
  distributed_training: False
  model_version: 1
  epoch: 1
+ test_interval: 50
+ fast_eval_iter: 0
+
 
  master_batch_size: -1
- val_batch_size: 64
- batch_size: 64
- nw: 6
+ val_batch_size: 8
+ batch_size: 8
+ nw: 4
  nw_eval: 2
  lr: 0.00005
  adjust_lr_factor: 0.2

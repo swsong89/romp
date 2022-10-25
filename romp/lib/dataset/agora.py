@@ -1,6 +1,7 @@
 from config import args
 from dataset.image_base import *
 from dataset.base import Base_Classes, Test_Funcs
+import os.path as osp
 
 default_mode = args().image_loading_mode
 
@@ -36,6 +37,8 @@ def AGORA(base_class=default_mode):
             imgpath = self.file_paths[index%len(self.file_paths)]
             annots = self.annots[imgpath].copy()
             imgpath = os.path.join(self.data_folder, self.split,imgpath)
+            assert osp.exists(imgpath), 'agora Path {} does not exist!'.format(
+                imgpath)
             image = cv2.imread(imgpath)[:,:,::-1]
             img_name = os.path.basename(imgpath)
             valid_mask = np.where(np.array([annot['isValid'] for annot in annots]))[0]

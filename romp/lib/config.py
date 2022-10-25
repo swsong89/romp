@@ -13,8 +13,13 @@ code_dir = currentfile.replace('config.py','')  # '/home/ssw/code/romp/romp/lib/
 project_dir = currentfile.replace(os.path.sep+os.path.join('romp', 'lib', 'config.py'), '') # '/home/ssw/code/romp'
 source_dir = currentfile.replace(os.path.sep+os.path.join('lib', 'config.py'), '')  # '/home/ssw/code/romp/romp'
 root_dir = project_dir.replace(project_dir.split(os.path.sep)[-1], '')  # '/home/ssw/code/'
-print('root_dir', root_dir)
+print('root_dir', root_dir)  #  /data2/2020/ssw/
 print('output_dir', os.path.join(project_dir, 'output/'))
+if 'data2' in root_dir:
+    os.environ['CUDA_VISIBLE_DEVICES'] = '0,1,2,3'
+else:
+    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+print('cuda: ', os.environ['CUDA_VISIBLE_DEVICES'])
 
 time_stamp = time.strftime('%Y-%m-%d_%H:%M:%S',time.localtime(int(round(time.time()*1000))/1000))
 yaml_timestamp = os.path.abspath(os.path.join(project_dir, 'active_configs' + os.sep + "active_context_{}.yaml".format(time_stamp).replace(":","_")))
@@ -31,7 +36,7 @@ def parse_args(input_args=None):  # ['--configs_yml=configs/eval_3dpw_test.yml']
 
     parser = argparse.ArgumentParser(description = 'ROMP: Monocular, One-stage, Regression of Multiple 3D People')
     parser.add_argument('--tab', type = str, default = 'ROMP_v1', help = 'additional tabs')
-    parser.add_argument('--configs_yml', type = str, default = os.path.join(project_dir,'configs/eval_3dpw_test_r9000p.yml'), help = 'settings')
+    parser.add_argument('--configs_yml', type = str, default = os.path.join(project_dir,'configs/v1_hrnet_3dpw_ft.yml'), help = 'settings')
     # parser.add_argument('--configs_yml', type = str, default = os.path.join(project_dir,'configs/v1.yml'), help = 'settings')
     parser.add_argument('--inputs', type = str, help = 'path to inputs') 
     parser.add_argument('--output_dir', type=str, default=os.path.join(project_dir, 'output/'), help='path to save outputs')
