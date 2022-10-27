@@ -123,7 +123,7 @@ def get_results(depth_relative, missed_age_ids, dr_thresh=0.2, miss_fine=0.3):
     return eval_results
 
 def write2txt(path, contents):
-    with open(path, 'w') as f:
+    with open(path, 'a') as f:
         for line in contents:
             f.write(line+"\n")
 

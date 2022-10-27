@@ -9,7 +9,10 @@ import torch
 import torch.nn as nn
 from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data import Dataset, DataLoader, ConcatDataset
-
+import sys
+import os.path as osp
+sys.path.insert(0, osp.join(osp.dirname(os.path.abspath(__file__)), 'lib'))  # '/home/ssw/code/romp/romp/' + 'lib'
+sys.path.insert(0, osp.join(osp.dirname(os.path.abspath(__file__)), '..', 'configs'))  # '/home/ssw/code/romp/' + 'configs'
 import config
 import constants
 from config import args, parse_args, ConfigContext

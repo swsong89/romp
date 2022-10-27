@@ -23,9 +23,9 @@ CUDA_VISIBLE_DEVICES=2 python romp/lib/evaluation/collect_3DPW_results.py --conf
 
 
 eval_3dpw_challenge
-CUDA_VISIBLE_DEVICES=2 python romp/lib/evaluation/collect_3DPW_results.py --configs_yml=configs/eval_3dpw_challenge.yml
+CUDA_VISIBLE_DEVICES=0 python romp/lib/evaluation/collect_3DPW_results.py --configs_yml=configs/eval_3dpw_challenge.yml
 eval_3dpw_test_resnet
-CUDA_VISIBLE_DEVICES=0 python romp/lib/evaluation/collect_3DPW_results.py --configs_yml=configs/eval_3dpw_test_resnet.yml
+CUDA_VISIBLE_DEVICES=0 python romp/lib/evaluation/collect_3DPW_results.py --configs_yml=configs/eval_3dpw_test_hrnet_ft.yml
 eval_3dpw_test_resnet_ft
 CUDA_VISIBLE_DEVICES=0 python romp/lib/evaluation/collect_3DPW_results.py --configs_yml=configs/eval_3dpw_test_resnet_ft.yml
 

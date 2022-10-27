@@ -10,7 +10,7 @@ active_configs/*
 *.zip
 *.c
 
-
+simple_romp/output
 
 
 #romp/

@@ -17,6 +17,7 @@ ARGS:
  nw_eval: 2
  lr: 0.00005
  adjust_lr_factor: 0.2
+ fast_eval_iter: 0
 
  fine_tune: True
  fix_backbone_training_scratch: False
@@ -40,7 +41,7 @@ ARGS:
  centermap_size: 64
  centermap_conf_thresh: 0.2
 
- model_path: trained_models/ROMP_HRNet32_V1.pkl
+ model_path: /home/ssw/code/output/checkpoints/check_hrnet_cm64_V1_hrnet_pw3d_ft.pkl
 
 loss_weight:
   MPJPE: 200.

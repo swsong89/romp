@@ -2,8 +2,7 @@ import sys
 import os.path as osp
 import os
 from tqdm import tqdm
-sys.path.insert(0, osp.join('lib'))
-os.environ["CUDA_VISIBLE_DEVICES"] = '0'
+
 from base import *
 from eval import val_result
 from loss_funcs import Loss, Learnable_Loss

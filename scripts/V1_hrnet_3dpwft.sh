@@ -9,3 +9,8 @@ TAB=$(cat $TRAIN_CONFIGS | shyaml get-value ARGS.tab)
 
 CUDA_VISIBLE_DEVICES=${GPUS} python -u -m romp.train --configs_yml=${TRAIN_CONFIGS}
 #CUDA_VISIBLE_DEVICES=${GPUS} nohup python -u -m romp.train --configs_yml=${TRAIN_CONFIGS} > 'log/'${TAB}'_'${DATASET}'_g'${GPUS}.log 2>&1 &
+
+
+CUDA_VISIBLE_DEVICES='0' python -u romp/train.py --configs_yml='configs/v1_hrnet_3dpw_ft.yml'
+CUDA_VISIBLE_DEVICES='0' python -u romp/train.py --configs_yml='configs/check_v1_hrnet_3dpw_ft.yml'
+

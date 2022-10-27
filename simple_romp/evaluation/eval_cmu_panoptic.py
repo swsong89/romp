@@ -1,3 +1,4 @@
+import time
 from unittest import result
 from bev import BEV
 import argparse
@@ -11,18 +12,25 @@ from romp import ResultSaver
 from romp.utils import progress_bar
 from itertools import product
 
+root_dir = '/data2/2020/ssw/'
+user_dir = '/home/lyc/'
+if 'code' in osp.dirname(os.path.abspath(__file__)):
+    root_dir = '/home/ssw/code/'
+    user_dir = '/home/ssw/'
+
+
 model_id = 2
 model_dict = {
-    1: '/home/yusun/CenterMesh/trained_models/BEV_Tabs/BEV_ft_agora.pth',
-    2: '/home/yusun/CenterMesh/trained_models/BEV.pth',
+    1: root_dir + 'romp' + '/trained_models/BEV_Tabs/BEV_ft_agora.pth',
+    2: user_dir + '/.romp/BEV.pth',
 }
 conf_dict = {1:[0.25, 40, 2], 2:[0.1, 40, 1.6]}
 
 visualize_results = False
 
-dataset_dir = '/home/yusun/data_drive/dataset/cmu_panoptic'
+dataset_dir = root_dir + '/dataset/cmu_panoptic'
 model_name = osp.splitext(osp.basename(model_dict[model_id]))[0]
-output_save_dir = '/home/yusun/data_drive/evaluation_results/CMU_Panoptic_results/evaluation_{}'.format(model_name)
+output_save_dir = root_dir + '/romp/simple_romp/output/CMU_Panoptic_results/evaluation_{}'.format(model_name)
 #if osp.isdir(output_save_dir):
 #    import shutil
 #    shutil.rmtree(output_save_dir)
@@ -33,7 +41,7 @@ default_eval_settings = argparse.Namespace(GPU=0, calc_smpl=True, center_thresh=
     input=None, frame_rate=24, temporal_optimize=False, smooth_coeff=3.0, \
     mode='image', model_path = model_dict[model_id], onnx=False, \
     save_path = osp.join(output_save_dir,'visualization'), save_video=False, show_items='mesh', relative_scale_thresh=conf_dict[model_id][2],\
-    smpl_path='/home/yusun/.romp/smpla_packed_info.pth', smil_path='/home/yusun/.romp/smil_packed_info.pth')
+    smpl_path= user_dir + '/.romp/smpla_packed_info.pth', smil_path= user_dir + '/.romp/smil_packed_info.pth')
 
 @torch.no_grad()
 def get_results():
@@ -315,13 +323,21 @@ def evaluation_results():
                 if aname in os.path.basename(img_name):
                     mpjpe_cacher[aname].append(float(mpjpe.item()))
         
-    print('Final results:')
+    output_filename = osp.join(output_save_dir,'results.txt')
+    time_stamp = time.strftime('%Y-%m-%d_%H:%M:%S', time.localtime(int(round(time.time() * 1000)) / 1000))
+    result_str = '\n' + time_stamp + '\n'
+    result_str += model_name + 'Final results:' + '\n'
+
     avg_all = []
     for key,value in mpjpe_cacher.items():
         mean = sum(value)/len(value)
-        print(key, mean)
+        result_str += key + ': %.3f\n' %(mean)
         avg_all.append(value)
-    print('MPJPE results:', np.concatenate(avg_all).mean())
+    result_str += 'MPJPE results: %.3f' %(np.concatenate(avg_all).mean())
+    print(result_str)
+    with open(output_filename, 'a') as f:  # 'w'参数是直接写，没有的话创建写，有的话覆盖，a是在后面附加,r是读
+        f.write(result_str)
+    f.close()
 
 if __name__ == '__main__':
     get_results()

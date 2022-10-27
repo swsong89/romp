@@ -9,9 +9,16 @@ import pickle
 from romp import ResultSaver
 from romp.utils import progress_bar
 
+root_dir = '/data2/2020/ssw/'
+user_dir = '/home/lyc/'
+if 'code' in osp.dirname(os.path.abspath(__file__)):
+    root_dir = '/home/ssw/code/'
+    user_dir = '/home/ssw/'
+
+
+
 set_id = 0
-# set_name = ['validation', 'test'][set_id]
-set_name = ['validation'][set_id]
+set_name = ['validation', 'test'][set_id]
 
 # preparing data:
 # 1. Register and download 1280x720 images of test set (5GB) and validation set (2GB) from https://agora.is.tue.mpg.de/download.php
@@ -28,9 +35,9 @@ set_name = ['validation'][set_id]
 
 visualize_results = False
 
-dataset_dir = '/home/ssw/code/dataset/AGORA'     #'/home/yusun/data_drive/dataset/AGORA'
+dataset_dir = root_dir + '/dataset/AGORA'     #'/home/yusun/data_drive/dataset/AGORA'
 # output_save_dir = '/home/yusun/data_drive/evaluation_results/AGORA/CVPR22_camera_ready_{}'.format(set_name)
-output_save_dir = '/home/ssw/code/romp/output_{}'.format(set_name)
+output_save_dir = root_dir + '/romp/simple_romp/output/agora_output_{}'.format(set_name)
 
 if osp.isdir(output_save_dir):
     import shutil
@@ -43,12 +50,12 @@ os.makedirs(prediction_save_dir,exist_ok=True)
 default_eval_settings = argparse.Namespace(GPU=0, calc_smpl=True, center_thresh=[0.15,0.25][set_id], nms_thresh=40,\
     render_mesh = visualize_results, renderer = 'pyrender', show = False, show_largest = False, \
     input=None, frame_rate=24, temporal_optimize=False, smooth_coeff=3.0, relative_scale_thresh=2, overlap_ratio=0.46,\
-    mode='image', model_path = '/home/yusun/CenterMesh/trained_models/BEV_Tabs/BEV_ft_agora.pth', onnx=False, crowd=False,\
+    mode='image', model_path = user_dir + '/.romp/BEV.pth', onnx=False, crowd=False,\
     save_path = osp.join(output_save_dir,'visualization'), save_video=False, show_items='mesh', show_patch_results=False, \
-    smpl_path='/home/ssw/.romp/smpla_packed_info.pth', smil_path='/home/ssw/.romp/smil_packed_info.pth')
+    smpl_path= user_dir + '/.romp/smpla_packed_info.pth', smil_path= user_dir + '/.romp/smil_packed_info.pth')
 
 if set_id == 0:
-    annots = np.load('/home/ssw/code/dataset/AGORA/annots_validation.npz',allow_pickle=True)['annots'][()]
+    annots = np.load(root_dir + '/dataset/AGORA/annots_validation.npz',allow_pickle=True)['annots'][()]
 
 def estimate_translation_cv2(joints_3d, joints_2d, proj_mat=None, cam_dist=None):
     camK = proj_mat
