@@ -76,6 +76,7 @@ class Base(object):
     
     def _init_log(self, hparams_dict):
         self.log_path = os.path.join(self.log_path,'{}'.format(self.tab))
+        print('log_path: ', self.log_path)
         os.makedirs(self.log_path,exist_ok=True)
         self.log_file = os.path.join(self.log_path,'{}.log'.format(self.tab))
         write2log(self.log_file,'================ Training Loss (%s) ================\n' % time.strftime("%c"))

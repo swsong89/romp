@@ -119,13 +119,14 @@ class Trainer(Base):
             batch_start_time = time.time()
             
         title  = '{}_epoch_{}.pkl'.format(self.tab,epoch)
+        logging.info('after epoch iter, model saved as {}'.format(title))
         save_model(self.model,title,parent_folder=self.model_save_dir)
         self.e_sche.step()
 
     def validation(self,epoch):
         logging.info('evaluation result on {} iters: '.format(epoch))
         for ds_name, val_loader in self.dataset_val_list.items():
-            logging.info('Evaluation on {}'.format(ds_name))
+            logging.info('Evaluation on {} dataset'.format(ds_name))
             eval_results = val_result(self,loader_val=val_loader, evaluation=False)
             if ds_name=='relative':
                 if 'relativity-PCRD_0.2' not in eval_results:
@@ -140,6 +141,7 @@ class Trainer(Base):
             
             else:
                 if 'MPJPE' not in eval_results:  # 刚开始训练，可能一个也没有检测到，所以结果是0,没有计算到MPJPE的话跳过
+                    MPJPE, PA_MPJPE = 0,0 # 下面validation后需要保存一个版本的的模型，需要MPJPE,和PA_MPJPE
                     continue
                 MPJPE, PA_MPJPE = eval_results['{}-{}'.format(ds_name,'MPJPE')], eval_results['{}-{}'.format(ds_name,'PA_MPJPE')]
                 test_flag = False
@@ -154,8 +156,8 @@ class Trainer(Base):
                     eval_results = val_result(self,loader_val=self.dataset_test_list[ds_name], evaluation=True)
                     self.summary_writer.add_scalars('{}-test'.format(ds_name), eval_results, self.global_count)
         
-        title = '{}_{:.4f}_{:.4f}_{}.pkl'.format(epoch, MPJPE, PA_MPJPE, self.tab)
-        logging.info('after validation model saved as {}'.format(title))
+        title = 'epoch_{}_MPJPE_{:.4f}_PA_MPJPE_{:.4f}_tab_{}.pkl'.format(epoch, MPJPE, PA_MPJPE, self.tab)
+        logging.info('after validation, model saved as {}'.format(title))
         save_model(self.model,title,parent_folder=self.model_save_dir)
 
         self.model.train()

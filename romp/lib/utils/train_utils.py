@@ -202,6 +202,9 @@ def process_pretrained(model_dict):
 
 
 def train_entire_model(net):
+    """
+    判断训层有哪些
+    """
     exclude_layer = []
     for index,(name,param) in enumerate(net.named_parameters()):
         if 'smpl' not in name:
