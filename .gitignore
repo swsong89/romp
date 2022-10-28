@@ -6,13 +6,16 @@ output/*/train
 output/*/test
 output/*/validation
 output/*/results.zip
+active_configs/*
+configs/*
+scripts/*
+
+*.html
+*/.romp
+*.pkl
 
 
 
-
-
-#romp/
-#configs/*_self.yml
 build/
 dist/
 *.egg-info/
@@ -20,8 +23,3 @@ dist/
 __pycache__/
 log/*
 .idea/
-
-
-# service
-
-#123
