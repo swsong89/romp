@@ -34,6 +34,7 @@ dataset_dict = {'h36m': H36M, 'mpii': MPII, 'coco': COCO14, 'posetrack':Posetrac
 
 class MixedDataset(Dataset):
     def __init__(self, datasets_used, sample_prob_dict, loading_modes=None, max_length=args().batch_size*10000, **kwargs):
+        logging.info('gathering train dataset: {}'.format(datasets_used))
         if loading_modes is None:
             self.datasets = [dataset_dict[ds]()(**kwargs) for ds in datasets_used]
         else:

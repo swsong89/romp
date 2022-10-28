@@ -9,10 +9,10 @@ import torch
 import torch.nn as nn
 from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data import Dataset, DataLoader, ConcatDataset
-import sys
 import os.path as osp
 sys.path.insert(0, osp.join(osp.dirname(os.path.abspath(__file__)), 'lib'))  # '/home/ssw/code/romp/romp/' + 'lib'
 sys.path.insert(0, osp.join(osp.dirname(os.path.abspath(__file__)), '..', 'configs'))  # '/home/ssw/code/romp/' + 'configs'
+
 import config
 import constants
 from config import args, parse_args, ConfigContext
@@ -82,11 +82,11 @@ class Base(object):
         self.summary_writer = SummaryWriter(self.log_path)
         save_yaml(hparams_dict, self.log_file.replace('.log', '.yml'))
 
-        self.result_img_dir = os.path.join(config.root_dir, 'output', 'result_images', '{}_on_gpu{}_val'.format(self.tab, self.gpu))
+        self.result_img_dir = os.path.join(config.project_dir, 'output_vis', 'result_images', '{}_on_gpu{}_val'.format(self.tab, self.gpu))
         os.makedirs(self.result_img_dir,exist_ok=True)
-        self.train_img_dir = os.path.join(config.root_dir, 'output', 'result_image_train', '{}_on_gpu{}_val'.format(self.tab, self.gpu))
+        self.train_img_dir = os.path.join(config.project_dir, 'output_vis', 'result_image_train', '{}_on_gpu{}_val'.format(self.tab, self.gpu))
         os.makedirs(self.train_img_dir,exist_ok=True)
-        self.model_save_dir = os.path.join(config.root_dir, 'output', 'checkpoints', '{}_on_gpu{}_val'.format(self.tab, self.gpu))
+        self.model_save_dir = os.path.join(config.project_dir, 'output_vis', 'checkpoints', '{}_on_gpu{}_val'.format(self.tab, self.gpu))
         os.makedirs(self.model_save_dir,exist_ok=True)
 
     def _init_params(self):
@@ -138,7 +138,7 @@ class Base(object):
         else:
             return DataLoader(dataset = datasets,\
                 batch_size = batch_size, shuffle = True, \
-                drop_last = True if train_flag else False, pin_memory = True,num_workers = self.nw)
+                drop_last = True if train_flag else False, pin_memory = True, num_workers = self.nw)
 
     def _create_single_data_loader(self, shuffle=False, drop_last=False, **kwargs):
         logging.info('gathering single image datasets.')

@@ -37,8 +37,8 @@ def AGORA(base_class=default_mode):
             imgpath = self.file_paths[index%len(self.file_paths)]
             annots = self.annots[imgpath].copy()
             imgpath = os.path.join(self.data_folder, self.split,imgpath)
-            assert osp.exists(imgpath), 'agora Path {} does not exist!'.format(
-                imgpath)
+            # assert osp.exists(imgpath), 'agora Path {} does not exist!'.format(
+            #     imgpath)  # 判断图片是否存在，如果正常的话可以注释掉
             image = cv2.imread(imgpath)[:,:,::-1]
             img_name = os.path.basename(imgpath)
             valid_mask = np.where(np.array([annot['isValid'] for annot in annots]))[0]

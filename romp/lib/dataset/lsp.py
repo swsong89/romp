@@ -36,8 +36,7 @@ def LSP(base_class=default_mode):
                 img_name = 'im{:05}.png'.format(img_number)
                 self.annots[img_name] = joints[idx]
             
-            load_eft_annots_path = os.path.join(self.data_folder, 'eft_annots.npz')
-            # print('Loading lsp annots: ', load_eft_annots_path)
+            load_eft_annots_path = os.path.join(self.data_folder,'eft_annots.npz')
             if os.path.exists(load_eft_annots_path):
                 self.eft_annots = np.load(load_eft_annots_path,allow_pickle=True)['annots'][()]
             else:
@@ -70,8 +69,8 @@ def LSP(base_class=default_mode):
         def get_image_info(self,index):
             img_name = self.file_paths[index%len(self.file_paths)]
             imgpath = os.path.join(self.img_dir, img_name)
-            assert osp.exists(imgpath), 'lsp Path {} does not exist!'.format(
-                imgpath)
+            # assert osp.exists(imgpath), 'lsp Path {} does not exist!'.format(
+            #     imgpath)  # 判断图片是否存在，如果正常的话可以注释掉
             image = cv2.imread(imgpath)[:,:,::-1]
 
             kp2ds = self.map_kps(self.annots[img_name], self.joint_mapper)[None]

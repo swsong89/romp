@@ -34,3 +34,44 @@ python romp/lib/evaluation/pw3d_eval/evaluate.py --dataset_split='val'
 
 
 
+
+
+"""
+跑romp demo
+romp --mode=video --calc_smpl --render_mesh -i=/path/to/video.mp4 -o=/path/to/output/folder/results.mp4 --save_video
+bev demo
+bev -m video -i /path/to/video.mp4 -o /path/to/output/folder/results.mp4 --save_video
+
+
+
+CUDA_VISIBLE_DEVICES=0 python romp/lib/evaluation/collect_3DPW_results.py --configs_yml=configs/eval_3dpw_test.yml
+
+https://github.com/Arthur151/ROMP#train
+
+https://github.com/Arthur151/ROMP/blob/master/docs/romp_evaluation.md
+
+
+改变backbone
+https://github.com/Arthur151/ROMP/blob/master/docs/train.md
+
+
+eval_3dpw_test
+CUDA_VISIBLE_DEVICES=2 python romp/lib/evaluation/collect_3DPW_results.py --configs_yml=configs/eval_3dpw_test.yml
+
+
+eval_3dpw_challenge
+CUDA_VISIBLE_DEVICES=2 python romp/lib/evaluation/collect_3DPW_results.py --configs_yml=configs/eval_3dpw_challenge.yml
+eval_3dpw_test_resnet
+CUDA_VISIBLE_DEVICES=0 python romp/lib/evaluation/collect_3DPW_results.py --configs_yml=configs/eval_3dpw_test_resnet.yml
+eval_3dpw_test_resnet_ft
+CUDA_VISIBLE_DEVICES=0 python romp/lib/evaluation/collect_3DPW_results.py --configs_yml=configs/eval_3dpw_test_resnet_ft.yml
+
+
+python romp/lib/evaluation/pw3d_eval/evaluate.py --dataset_split='val'
+
+
+
+CUDA_VISIBLE_DEVICES='2' python -u  romp/train.py --configs_yml='configs/v6_train.yml'
+
+
+

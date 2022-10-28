@@ -45,8 +45,8 @@ def COCO14(base_class=default_mode):
         def get_image_info(self,index):
             img_name = self.file_paths[index%len(self.file_paths)]
             imgpath = self._get_image_path(img_name)
-            assert osp.exists(imgpath), 'coco Path {} does not exist!'.format(
-                imgpath)
+            # assert osp.exists(imgpath), 'coco Path {} does not exist!'.format(
+            #     imgpath)  # 判断图片是否存在，如果正常的话可以注释掉
             image = cv2.imread(imgpath)[:,:,::-1]
             #mask = self.get_exclude_mask(anno, index)[:,:,np.newaxis].astype(np.float32)
 

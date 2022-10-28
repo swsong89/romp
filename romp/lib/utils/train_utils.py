@@ -61,7 +61,7 @@ def load_model(path, model, prefix = 'module.', drop_prefix='',optimizer=None, *
     return model
 
 def save_single_model(model,path):
-    logging.info('saving {}'.format(path))
+    logging.info('saving model {}'.format(path))
     #model_save = {'model_state_dict':model.state_dict(),'optimizer_state_dict':optimizer.state_dict()}
     torch.save(model.module.state_dict(), path)
 

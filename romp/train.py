@@ -1,10 +1,14 @@
 import sys
 import os.path as osp
 import os
-from tqdm import tqdm
 
 from base import *
 from eval import val_result
+
+# from .base import *
+# from .eval import val_result
+
+from tqdm import tqdm
 from loss_funcs import Loss, Learnable_Loss
 
 np.set_printoptions(precision=2, suppress=True)
@@ -86,7 +90,7 @@ class Trainer(Base):
         run_time, data_time, losses = [AverageMeter() for i in range(3)]
         losses_dict= AverageMeter_Dict()
         batch_start_time = time.time()
-        for iter_index, meta_data in enumerate(tqdm(self.loader)):
+        for iter_index, meta_data in enumerate(self.loader):
             if self.fast_eval_iter==0:
                 self.validation(epoch)
                 break
@@ -105,6 +109,7 @@ class Trainer(Base):
                 self.train_log_visualization(outputs, loss, run_time, data_time, losses, losses_dict, epoch, iter_index)
             
             if self.global_count%self.test_interval==0 or self.global_count==self.fast_eval_iter: #self.print_freq*2
+                logging.info('before validation save val_cache model')
                 save_model(self.model,'{}_val_cache.pkl'.format(self.tab),parent_folder=self.model_save_dir)
                 self.validation(epoch)
             
@@ -134,6 +139,8 @@ class Trainer(Base):
                 self.evaluation_results_dict['relative']['AGE_baby'].append(age_baby_acc)
             
             else:
+                if 'MPJPE' not in eval_results:  # 刚开始训练，可能一个也没有检测到，所以结果是0,没有计算到MPJPE的话跳过
+                    continue
                 MPJPE, PA_MPJPE = eval_results['{}-{}'.format(ds_name,'MPJPE')], eval_results['{}-{}'.format(ds_name,'PA_MPJPE')]
                 test_flag = False
                 if ds_name in self.dataset_test_list:
@@ -148,7 +155,7 @@ class Trainer(Base):
                     self.summary_writer.add_scalars('{}-test'.format(ds_name), eval_results, self.global_count)
         
         title = '{}_{:.4f}_{:.4f}_{}.pkl'.format(epoch, MPJPE, PA_MPJPE, self.tab)
-        logging.info('Model saved as {}'.format(title))
+        logging.info('after validation model saved as {}'.format(title))
         save_model(self.model,title,parent_folder=self.model_save_dir)
 
         self.model.train()
@@ -164,12 +171,6 @@ def main():
     with ConfigContext(parse_args(sys.argv[1:])):
         trainer = Trainer()
         trainer.train()
-    # input_args = sys.argv[1:]
-    # input_args.append("--configs_yml=configs/v6_train.yml")
-    # with ConfigContext(parse_args(input_args)):
-    #     trainer = Trainer()
-    #     trainer.train()
 
 if __name__ == '__main__':
     main()
-

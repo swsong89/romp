@@ -159,4 +159,3 @@ if __name__ == '__main__':
         result_save_path = get_BEV_results_on_RH(set_name)
         #result_save_path = osp.join(output_save_dir, 'test_results.npz')
         RH_Evaluation(result_save_path, Relative_Human_dir, set_name)
-

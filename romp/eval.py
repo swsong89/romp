@@ -1,4 +1,4 @@
-
+# from .base import *
 from base import *
 from tqdm import tqdm
 from loss_funcs import _calc_MPJAE, calc_mpjpe, calc_pampjpe, calc_pck, align_by_parts
@@ -64,7 +64,7 @@ def calc_outputs_evaluation_matrix(self, outputs, ED):
         if ds not in constants.dataset_nokp3ds:
             if args().calc_PVE_error and ds in constants.PVE_ds:
                 batch_PVE = torch.norm(
-                    outputs['meta_data']['verts'][val_idx]-outputs['verts'][val_idx], p=2, dim=-1).mean(-1)
+                    outputs['meta_data']['verts'][val_idx]-torch.unsqueeze(outputs['verts'][val_idx], dim=1), p=2, dim=-1).mean(-1)
                 ED['PVE_new'][ds].append(batch_PVE)
 
             abs_error, aligned_poses = calc_mpjpe(real_3d, predicts, align_inds=align_inds, return_org=True)
@@ -91,11 +91,11 @@ def calc_outputs_evaluation_matrix(self, outputs, ED):
     return ED, kp3d_vis
 
 @torch.no_grad()
-def val_result(self, loader_val, evaluation = False, vis_results=False):
+def val_result(self, loader_val, evaluation = False, vis_results=False):  # evaluation = False为val, True为test
     eval_model = nn.DataParallel(self.model.module).eval()
     ED = _init_error_dict()
 
-    for iter_num, meta_data in enumerate(tqdm(loader_val)):
+    for iter_num, meta_data in enumerate(loader_val):
         if meta_data is None:
             continue
 
@@ -105,17 +105,17 @@ def val_result(self, loader_val, evaluation = False, vis_results=False):
         except:
             continue
 
-        if outputs['detection_flag'].sum()==0:
-            print('Detection failure!!! {}'.format(outputs['meta_data']['imgpath']))
+        if outputs['detection_flag'].sum()==0:  # 没有检测出来
+            # print('Detection failure!!! {}'.format(outputs['meta_data']['imgpath']))  # 从头开始训练的时候如果嫌未检测的太多，打印太多可以先注释掉
             continue
 
         ED, kp3d_vis = calc_outputs_evaluation_matrix(
             self, outputs, ED)
 
-        if iter_num % (self.val_batch_size*2) == 0:
+        if iter_num % (self.val_batch_size*2) == 0:  # 两个val_batch_size打印一次
             print('{}/{}'.format(iter_num, len(loader_val)))
             #eval_results = print_results(ED.copy())
-            if not evaluation:
+            if not evaluation:  # validation,validation的话重新计算一次
                 outputs = self.network_forward(eval_model, meta_data_org, self.val_cfg)
             vis_ids = np.arange(max(min(self.val_batch_size, len(outputs['reorganize_idx'])), 8)//4), None
             save_name = '{}_{}'.format(self.global_count,iter_num)
@@ -127,7 +127,7 @@ def val_result(self, loader_val, evaluation = False, vis_results=False):
             self.visualizer.visulize_result(outputs, outputs['meta_data'], show_items=show_items,\
                 vis_cfg={'settings': ['save_img'], 'vids': vis_ids, 'save_dir':self.result_img_dir, 'save_name':save_name}, kp3ds=kp3d_vis) #'org_img', 
 
-    print('{} on local_rank {}'.format(['Evaluation' if evaluation else 'Validation'], self.local_rank))
+    print('{} on local_rank {}'.format(['Test' if evaluation else 'Validation'], self.local_rank))
     eval_results = print_results(ED)
 
     return eval_results
@@ -170,7 +170,7 @@ def print_results(ED):
     for ds, results in ED['age_relative'].items():
         result_length = sum([len(ED['age_relative'][ds][age_type]) for age_type in constants.relative_age_types])
         if result_length>0:
-            print('Relative age evaluation results:')
+            print('Relative age results:')
             age_error_results = {}
             for age_id, age_type in enumerate(constants.relative_age_types):
                 age_pred_ids = torch.cat(ED['age_relative'][ds][age_type], 0)

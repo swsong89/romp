@@ -100,8 +100,8 @@ def H36M(base_class=default_mode):
             root_trans = info['kp3d_mono'].reshape(-1,3)[[constants.H36M_32['R_Hip'], constants.H36M_32['L_Hip']]].mean(0)[None]
 
             imgpath = os.path.join(self.image_folder,img_name)
-            assert osp.exists(imgpath), 'h36m Path {} does not exist!'.format(
-                imgpath)
+            # assert osp.exists(imgpath), 'h36m Path {} does not exist!'.format(
+            #     imgpath)  # 判断图片是否存在，如果正常的话可以注释掉
             image = cv2.imread(imgpath)[:,:,::-1]
             kp2d = self.map_kps(info['kp2d'].reshape(-1,2).copy(),maps=self.joint_mapper)
             kp2ds = np.concatenate([kp2d,self.kps_vis],1)[None]

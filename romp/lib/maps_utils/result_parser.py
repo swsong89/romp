@@ -209,8 +209,8 @@ class ResultParser(nn.Module):
             outputs['params_pred'] = self.parameter_sampling(outputs['params_maps'], batch_ids, flat_inds, use_transform=True)
 
         outputs, meta_data = reorganize_data(outputs, meta_data, exclude_keys, gt_keys, batch_ids, person_ids)
-        outputs['centers_pred'] = torch.stack([flat_inds % args().centermap_size,
-                                               torch.div(flat_inds, args().centermap_size, rounding_mode='floor')], 1)
+        outputs['centers_pred'] = torch.stack([flat_inds%args().centermap_size,
+                            torch.div(flat_inds, args().centermap_size, rounding_mode='floor')],1)
         return outputs, meta_data
 
     def match_gt_pred(self,center_gts_info, center_preds_info, device, is_training):
@@ -267,7 +267,7 @@ class ResultParser(nn.Module):
             batch_ids, flat_inds, cyxs, top_score = self.centermap_parser.parse_centermap_heatmap_adaptive_scale_batch(outputs['center_map'])
         
             if len(batch_ids)==0:
-                logging.error('result_parser 270 number of predicted center is {}'.format(batch_ids))
+                logging.error('result _parser number of predicted center is {}'.format(batch_ids))
                 batch_ids, flat_inds, cyxs, top_score = self.centermap_parser.parse_centermap_heatmap_adaptive_scale_batch(outputs['center_map'], top_n_people=1)
                 outputs['detection_flag'] = torch.Tensor([False for _ in range(len(batch_ids))]).cuda()
 

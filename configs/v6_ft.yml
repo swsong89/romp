@@ -1,6 +1,7 @@
 ARGS:
  tab: 'V6_hrnet_relative_train'
- dataset: h36m,muco,coco,lsp,agora,pw3d,relative_human,posetrack
+#  dataset: h36m,muco,coco,lsp,agora,pw3d,relative_human,posetrack
+ dataset: muco,lsp,agora,pw3d,relative_human
  eval_datasets: 'relative,agora'
  gpu: 0
  distributed_training: False
@@ -8,12 +9,16 @@ ARGS:
  centermap_size: 128
  model_return_loss: True
  image_loading_mode: 'image_relative'
+
+
+ # CUDA_VISIBLE_DEVICES='3' python -u  romp/train.py --configs_yml='configs/v6_ft.yml' >> log/hrnet_cm128_V6_hrnet_relative_train/hrnet_cm128_V6_hrnet_relative_train.log 2>&1
  
  fine_tune: True
  new_training: False
  new_training_iters: 600
  fast_eval_iter: 100
  print_freq: 50
+#  fast_eval_iter: 0
 
  learn_relative: True
  learn_relative_age: True
@@ -22,8 +27,8 @@ ARGS:
  add_depth_encoding: True
 
  master_batch_size: -1
- val_batch_size: 16
- batch_size: 32
+ val_batch_size: 8
+ batch_size: 8
  nw: 4
  nw_eval: 2
  lr: 0.00005
@@ -64,12 +69,22 @@ loss_weight:
   R_Age: 4000. 
   R_Depth: 400.
   
+# sample_prob:
+#   h36m: 0.14
+#   muco: 0.14
+#   coco: 0.12
+#   lsp: 0.06
+#   agora: 0.14
+#   pw3d: 0.14
+#   relative_human: 0.16
+#   posetrack: 0.1
+
 sample_prob:
-  h36m: 0.14
-  muco: 0.14
-  coco: 0.12
-  lsp: 0.06
+#  h36m: 0.14
+  muco: 0.28
+#  coco: 0.12
+  lsp: 0.18
   agora: 0.14
   pw3d: 0.14
-  relative_human: 0.16
-  posetrack: 0.1
+  relative_human: 0.26
+#  posetrack: 0.1

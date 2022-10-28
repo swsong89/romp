@@ -483,14 +483,14 @@ def main(submit_dir, truth_dir, output_filename, dataset_split):
     }
 
     time_stamp = time.strftime('%Y-%m-%d_%H:%M:%S', time.localtime(int(round(time.time() * 1000)) / 1000))
-    str = '\n' + time_stamp + '\n'
-    str += '3DPW {}\n'.format(evaluation_keys)
+    result_str = '\n' + time_stamp + '\n'
+    result_str += '3DPW {}\n'.format(evaluation_keys)
     for err in errs.keys():
         if not errs[err] == np.inf:
-            str = str + err + ': %.3f\n' %(errs[err])
-    print(str)
+            result_str = result_str + err + ': %.3f\n' %(errs[err])
+    print(result_str)
     with open(output_filename, 'a') as f:  # 'w'参数是直接写，没有的话创建写，有的话覆盖，a是在后面附加,r是读
-        f.write(str)
+        f.write(result_str)
     f.close()
 
 
