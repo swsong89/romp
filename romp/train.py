@@ -1,5 +1,10 @@
-from .base import *
-from .eval import val_result
+import sys
+import os.path as osp
+import os
+from tqdm import tqdm
+
+from base import *
+from eval import val_result
 from loss_funcs import Loss, Learnable_Loss
 
 np.set_printoptions(precision=2, suppress=True)
@@ -81,7 +86,7 @@ class Trainer(Base):
         run_time, data_time, losses = [AverageMeter() for i in range(3)]
         losses_dict= AverageMeter_Dict()
         batch_start_time = time.time()
-        for iter_index, meta_data in enumerate(self.loader):
+        for iter_index, meta_data in enumerate(tqdm(self.loader)):
             if self.fast_eval_iter==0:
                 self.validation(epoch)
                 break
@@ -159,6 +164,11 @@ def main():
     with ConfigContext(parse_args(sys.argv[1:])):
         trainer = Trainer()
         trainer.train()
+    # input_args = sys.argv[1:]
+    # input_args.append("--configs_yml=configs/v6_train.yml")
+    # with ConfigContext(parse_args(input_args)):
+    #     trainer = Trainer()
+    #     trainer.train()
 
 if __name__ == '__main__':
     main()

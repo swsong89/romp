@@ -500,7 +500,7 @@ if __name__ == "__main__":
     # root_dir = '/data2/2020/ssw/123'
 
     dataset_split = 'test'
-    submit_dir = root_dir + '/romp/output/R_ROMP_HRNet32_V1_ft_3DPW'  # R_ROMP_ResNet50_V1  R_ROMP_HRNet32_V1 R_ROMP_ResNet50_V1_ft_3DPW
+    submit_dir = root_dir + '/romp/output/R_ROMP_HRNet32_V1'  # R_ROMP_ResNet50_V1  R_ROMP_HRNet32_V1 R_ROMP_ResNet50_V1_ft_3DPW
     truth_dir = root_dir + '/dataset/3DPW/sequenceFiles'
 
     # submit_dir = sys.argv[1]
@@ -533,12 +533,12 @@ if __name__ == "__main__":
     # output_filename = submit_dir+ '/scores.txt'
     # truth_dir = root_dir + '/dataset/3DPW/sequenceFiles'
 
-    submit_dir = sys.argv[1]
-    truth_dir = sys.argv[2]
-    dataset_split = sys.argv[3]
-
-    output_filename = submit_dir + '/' + dataset_split + '_scores.txt'
-    main(submit_dir, truth_dir, output_filename, dataset_split)
+    # submit_dir = sys.argv[1]
+    # truth_dir = sys.argv[2]
+    # dataset_split = sys.argv[3]
+    #
+    # output_filename = submit_dir + '/' + dataset_split + '_scores.txt'
+    # main(submit_dir, truth_dir, output_filename, dataset_split)
 
     #
 

@@ -17,4 +17,4 @@ ARGS:
  smpl_mesh_root_align: True # False
 
  model_path: trained_models/ROMP_ResNet50_V1.pkl #trained_models/ROMP_HRNet32_V1_CAR.pkl
- dataset_rootdir: '/media/yusun/Extreme SSD/dataset' #'/path/to/dataset/3DPW'
+# dataset_rootdir: '/media/yusun/Extreme SSD/dataset' #'/path/to/dataset/3DPW'

@@ -16,6 +16,11 @@ scripts/*
 
 
 
+*.zip
+*.c
+
+simple_romp/output
+
 build/
 dist/
 *.egg-info/
@@ -23,3 +28,14 @@ dist/
 __pycache__/
 log/*
 .idea/
+
+
+*.json
+
+
+# service
+
+#r9000p
+deom_videos
+env_romp.tar.gz
+zip

@@ -134,8 +134,8 @@ class BEV(nn.Module):
         
     @time_cost('BEV')
     @torch.no_grad()
-    def forward(self, image, signal_ID=0, **kwargs):
-        if image.shape[1] / image.shape[0] >= 2 and self.settings.crowd:
+    def forward(self, image, signal_ID=0, **kwargs): #  123
+        if image.shape[1] / image.shape[0] >= 2:   # image.shape h w c 297,640,3 宽高比大于2认为是长图片，需要crop为15小块进行分别检测
             outputs = self.process_long_image(image, show_patch_results=self.settings.show_patch_results)
         else:
             outputs = self.process_normal_image(image, signal_ID)
@@ -179,55 +179,57 @@ class BEV(nn.Module):
         return outputs
     
     #@time_cost('BEV')
-    def process_long_image(self, full_image, show_patch_results=False):
-        print('processing in crowd mode')
+    def process_long_image(self, full_image, show_patch_results=False):  # full_image 297,640,3
+        print('processing in crowd mode 123456')  # 图片比较宽，人可能比较多
         from .split2process import get_image_split_plan, convert_crop_cam_params2full_image,\
             collect_outputs, exclude_boudary_subjects, padding_image_overlap
         full_image_pad, image_pad_info, pad_length = padding_image_overlap(full_image, overlap_ratio=self.settings.overlap_ratio)
-        meta_data = {'input2org_offsets': image_pad_info}
+        meta_data = {'input2org_offsets': image_pad_info}  # 左右各填充237,最后宽度为, 237*2+640=1114, full_image_pad 297,1114,3  pad_length = 237, image_pad_info [171., 469.,   0., 640., 297., 640.]
         
-        fh, fw = full_image_pad.shape[:2]
+        fh, fw = full_image_pad.shape[:2]  # full_image_pad 297,1114,3
         # please crop the human area out from the huge/long image to facilitate better predictions.
-        crop_boxes = get_image_split_plan(full_image_pad,overlap_ratio=self.settings.overlap_ratio)
+        crop_boxes = get_image_split_plan(full_image_pad,overlap_ratio=self.settings.overlap_ratio)  # crop_boxes.shape [15,4]
 
-        croped_images, outputs_list = [], []
-        for cid, crop_box in enumerate(crop_boxes):
-            l,r,t,b = crop_box
-            croped_image = full_image_pad[t:b, l:r]
-            crop_outputs, image_pad_info = self.single_image_forward(croped_image)
+        croped_images, outputs_list = [], []  # overlap_ratio=0.8,意味着重叠比例是0.2, 297*0.2=59,每次移动59, croped_images放入有检测结果的crop_image,output放入预测结果，如果是None,也放入
+        for cid, crop_box in enumerate(crop_boxes):  # crop_boxes每行都是裁剪的h,w
+            l,r,t,b = crop_box  # w0,297, h0,297  w59,356,  h0,297, 最后几个是653,950 712,1009, 772,1069 817, 1069
+            croped_image = full_image_pad[t:b, l:r]  # 297,297,3 
+            crop_outputs, image_pad_info = self.single_image_forward(croped_image)  # 得到crop图像的输出
             if crop_outputs is None:
                 outputs_list.append(crop_outputs)
+                croped_images.append(croped_image)
                 continue
-            verts, joints, face = self.smpl_parser(crop_outputs['smpl_betas'], crop_outputs['smpl_thetas']) 
+            verts, joints, face = self.smpl_parser(crop_outputs['smpl_betas'], crop_outputs['smpl_thetas'])  # 利用beta,theta重新计算verts,joints
             crop_outputs.update({'verts': verts, 'joints': joints, 'smpl_face':face})
             outputs_list.append(crop_outputs)
             croped_images.append(croped_image)
         
         # exclude the subjects in the overlapping area, the right of this crop
-        for cid in range(len(crop_boxes)):
+        for cid in range(len(crop_boxes)):  # crop_boxes.shape [15,4]  croped_images 9   outputs_list 15  crop_boxes 15
             this_outs = outputs_list[cid]
             if this_outs is not None:
                 if cid != len(crop_boxes) - 1:
                     this_right, next_left = crop_boxes[cid, 1], crop_boxes[cid+1, 0]
-                    drop_boundary_ratio = (this_right - next_left) / fh / 2
+                    drop_boundary_ratio = (this_right - next_left) / fh / 2  # drop_boundary_ratio=0.4 (297-59)/297/2
                     exclude_boudary_subjects(this_outs, drop_boundary_ratio, ptype='left', torlerance=0)
-                ch, cw = croped_images[cid].shape[:2]
+                ch, cw = croped_images[cid].shape[:2]  # 一张比较宽的图片会检测15次crop_image, 如果没检测出,outputs_list会放入None,croped_images则不会放入，所以造成outputs_list和croped_images对不上
                 projection = body_mesh_projection2image(this_outs['joints'], this_outs['cam'], vertices=this_outs['verts'], input2org_offsets=torch.Tensor([0, ch, 0, cw, ch, cw]))
                 this_outs.update(projection)
                 
         # exclude the subjects in the overlapping area, the left of next crop
-        for cid in range(1,len(crop_boxes)-1):
+        for cid in range(1,len(crop_boxes)-1):  # 左边的crop和右边的crop对比，如果右边的不是None,那么去除右边crop中两个crop重叠部分的人
             this_outs, next_outs = outputs_list[cid], outputs_list[cid+1]
             this_right, next_left = crop_boxes[cid, 1], crop_boxes[cid+1, 0]
             drop_boundary_ratio = (this_right - next_left) / fh / 2 
             if next_outs is not None:
                 exclude_boudary_subjects(next_outs, drop_boundary_ratio, ptype='right', torlerance=0) 
         
-        for cid, crop_image in enumerate(croped_images):
+        for cid, crop_image in enumerate(croped_images):  # outputs_list 15   croped_images 9
             this_outs = outputs_list[cid]
-            ch, cw = croped_images[cid].shape[:2]
-            this_outs = suppressing_redundant_prediction_via_projection(this_outs, [ch, cw], thresh=self.settings.nms_thresh,conf_based=True)
-            this_outs = remove_outlier(this_outs, scale_thresh=1, relative_scale_thresh=self.settings.relative_scale_thresh)
+            if this_outs is not None:
+                ch, cw = croped_images[cid].shape[:2]
+                this_outs = suppressing_redundant_prediction_via_projection(this_outs, [ch, cw], thresh=self.settings.nms_thresh,conf_based=True)
+                this_outs = remove_outlier(this_outs, scale_thresh=1, relative_scale_thresh=self.settings.relative_scale_thresh)
         
         if show_patch_results:
             rendering_cfgs = {'mesh_color':'identity', 'items':['mesh','center_conf','pj2d'], 'renderer':self.settings.renderer}

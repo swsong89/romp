@@ -1,5 +1,6 @@
 
-from .base import *
+from base import *
+from tqdm import tqdm
 from loss_funcs import _calc_MPJAE, calc_mpjpe, calc_pampjpe, calc_pck, align_by_parts
 from evaluation import h36m_evaluation_act_wise, cmup_evaluation_act_wise
 from evaluation.evaluation_matrix import _calc_relative_age_error_weak_, _calc_absolute_depth_error,\
@@ -94,7 +95,7 @@ def val_result(self, loader_val, evaluation = False, vis_results=False):
     eval_model = nn.DataParallel(self.model.module).eval()
     ED = _init_error_dict()
 
-    for iter_num, meta_data in enumerate(loader_val):
+    for iter_num, meta_data in enumerate(tqdm(loader_val)):
         if meta_data is None:
             continue
 
