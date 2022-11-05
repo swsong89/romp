@@ -124,8 +124,13 @@ def val_result(self, loader_val, evaluation = False, vis_results=False):  # eval
             show_items = ['mesh', 'joint_sampler', 'pj2d', 'classify']
             if kp3d_vis is not None:
                 show_items.append('j3d')
-            self.visualizer.visulize_result(outputs, outputs['meta_data'], show_items=show_items,\
-                vis_cfg={'settings': ['save_img'], 'vids': vis_ids, 'save_dir':self.result_img_dir, 'save_name':save_name}, kp3ds=kp3d_vis) #'org_img', 
+            try:
+                self.visualizer.visulize_result(outputs, outputs['meta_data'], show_items=show_items,\
+                    vis_cfg={'settings': ['save_img'], 'vids': vis_ids, 'save_dir':self.result_img_dir, 'save_name':save_name}, kp3ds=kp3d_vis) #'org_img', 
+            except Exception as e:
+                # logging.info('visulize_result error vis_cfg: {}'.format(
+                #     vis_cfg={'settings': ['save_img'], 'vids': vis_ids, 'save_dir':self.result_img_dir, 'save_name':save_name}))
+                logging.info('visulize_result error: {}'.format(e))
 
     print('{} on local_rank {}'.format(['Test' if evaluation else 'Validation'], self.local_rank))
     eval_results = print_results(ED)

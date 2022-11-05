@@ -33,12 +33,12 @@ class Trainer(Base):
         init_seeds(self.local_rank, cuda_deterministic=False)
         logging.info('start training')
         self.model.train()
-        if self.fix_backbone_training_scratch:
+        if self.fix_backbone_training_scratch:  # 是否训练backbone,默认训练
             fix_backbone(self.model, exclude_key=['backbone.'])
         else:
             train_entire_model(self.model)
-        for epoch in range(self.epoch):
-            if epoch==1:
+        for epoch in range(self.start_epoch+1, self.epoch): # 没有提供模型从0开始，提供模型从模型下一个epoch开始, start_epoch默認是-1，然後加+，當前從0開始，在當前的epoch下一個訓練
+            if epoch==self.start_epoch+1+1:  # 第二個訓練的epoch
                 train_entire_model(self.model)
             self.train_epoch(epoch)
         self.summary_writer.close()
@@ -86,9 +86,9 @@ class Trainer(Base):
             train_vis_dict = self.visualizer.visulize_result(outputs, outputs['meta_data'], show_items=['org_img', 'mesh', 'joint_sampler', 'pj2d', 'centermap'],\
                 vis_cfg={'settings': ['save_img'], 'vids': vis_ids, 'save_dir':self.train_img_dir, 'save_name':save_name, 'verrors': [vis_errors], 'error_names':['E']})
 
-    def train_epoch(self,epoch):
-        run_time, data_time, losses = [AverageMeter() for i in range(3)]
-        losses_dict= AverageMeter_Dict()
+    def train_epoch(self, epoch):
+        run_time, data_time, losses = [AverageMeter() for i in range(3)]  # val, avg ,sum, count
+        losses_dict= AverageMeter_Dict()  # dict_store, count
         batch_start_time = time.time()
         for iter_index, meta_data in enumerate(self.loader):
             if self.fast_eval_iter==0:
@@ -111,19 +111,19 @@ class Trainer(Base):
             if self.global_count%self.test_interval==0 or self.global_count==self.fast_eval_iter: #self.print_freq*2
                 logging.info('before validation save val_cache model')
                 save_model(self.model,'{}_val_cache.pkl'.format(self.tab),parent_folder=self.model_save_dir)
-                self.validation(epoch)
+                self.validation(epoch, iter_index)
             
             if self.distributed_training:
                 # wait for rank 0 process finish the job
                 torch.distributed.barrier()
             batch_start_time = time.time()
             
-        title  = '{}_epoch_{}.pkl'.format(self.tab,epoch)
+        title = 'epoch_{}_{}.pkl'.format(epoch, self.tab)
         logging.info('after epoch iter, model saved as {}'.format(title))
         save_model(self.model,title,parent_folder=self.model_save_dir)
         self.e_sche.step()
 
-    def validation(self,epoch):
+    def validation(self,epoch, iter_index=0):
         logging.info('evaluation result on {} iters: '.format(epoch))
         for ds_name, val_loader in self.dataset_val_list.items():
             logging.info('Evaluation on {} dataset'.format(ds_name))
@@ -140,23 +140,24 @@ class Trainer(Base):
                 self.evaluation_results_dict['relative']['AGE_baby'].append(age_baby_acc)
             
             else:
-                if 'MPJPE' not in eval_results:  # 刚开始训练，可能一个也没有检测到，所以结果是0,没有计算到MPJPE的话跳过
+                try:
+                    MPJPE, PA_MPJPE = eval_results['{}-{}'.format(ds_name,'MPJPE')], eval_results['{}-{}'.format(ds_name,'PA_MPJPE')]
+                    test_flag = False
+                    if ds_name in self.dataset_test_list:
+                        test_flag = True
+                        if ds_name in self.val_best_PAMPJPE:
+                            if PA_MPJPE<self.val_best_PAMPJPE[ds_name]:
+                                self.val_best_PAMPJPE[ds_name] = PA_MPJPE
+                            else:
+                                test_flag = False
+                    if test_flag or self.test_interval<100:
+                        eval_results = val_result(self,loader_val=self.dataset_test_list[ds_name], evaluation=True)
+                        self.summary_writer.add_scalars('{}-test'.format(ds_name), eval_results, self.global_count)
+                except Exception as e:
+                    print(e)
                     MPJPE, PA_MPJPE = 0,0 # 下面validation后需要保存一个版本的的模型，需要MPJPE,和PA_MPJPE
-                    continue
-                MPJPE, PA_MPJPE = eval_results['{}-{}'.format(ds_name,'MPJPE')], eval_results['{}-{}'.format(ds_name,'PA_MPJPE')]
-                test_flag = False
-                if ds_name in self.dataset_test_list:
-                    test_flag = True
-                    if ds_name in self.val_best_PAMPJPE:
-                        if PA_MPJPE<self.val_best_PAMPJPE[ds_name]:
-                            self.val_best_PAMPJPE[ds_name] = PA_MPJPE
-                        else:
-                            test_flag = False
-                if test_flag or self.test_interval<100:
-                    eval_results = val_result(self,loader_val=self.dataset_test_list[ds_name], evaluation=True)
-                    self.summary_writer.add_scalars('{}-test'.format(ds_name), eval_results, self.global_count)
         
-        title = 'epoch_{}_MPJPE_{:.4f}_PA_MPJPE_{:.4f}_tab_{}.pkl'.format(epoch, MPJPE, PA_MPJPE, self.tab)
+        title = 'validation_epoch_{}_iter_{}_MPJPE_{:.2f}_PA_MPJPE_{:.2f}_tab_{}.pkl'.format(epoch, iter_index, MPJPE, PA_MPJPE, self.tab)
         logging.info('after validation, model saved as {}'.format(title))
         save_model(self.model,title,parent_folder=self.model_save_dir)
 

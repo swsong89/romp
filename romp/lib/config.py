@@ -37,7 +37,7 @@ def parse_args(input_args=None):  # ['--configs_yml=configs/eval_3dpw_test.yml']
 
     parser = argparse.ArgumentParser(description = 'ROMP: Monocular, One-stage, Regression of Multiple 3D People')
     parser.add_argument('--tab', type = str, default = 'ROMP_v1', help = 'additional tabs')
-    parser.add_argument('--configs_yml', type = str, default = os.path.join(project_dir,'configs/v1_hrnet_3dpw_ft.yml'), help = 'settings')
+    parser.add_argument('--configs_yml', type = str, default = os.path.join(project_dir,'configs/v6_train_r9000p.yml'), help = 'settings')
     # parser.add_argument('--configs_yml', type = str, default = os.path.join(project_dir,'configs/v1.yml'), help = 'settings')
     parser.add_argument('--inputs', type = str, help = 'path to inputs') 
     parser.add_argument('--output_dir', type=str, default=os.path.join(project_dir, 'output/'), help='path to save outputs')
@@ -102,6 +102,7 @@ def parse_args(input_args=None):  # ['--configs_yml=configs/eval_3dpw_test.yml']
     train_group.add_argument('--nw',default=4,help='number of workers',type=int)
     train_group.add_argument('--optimizer_type',type = str,default = 'Adam',help = 'choice of optimizer')
     train_group.add_argument('--fix_backbone_training_scratch',type = bool,default = False,help = 'whether to fix the backbone features if we train the model from scratch.')
+    train_group.add_argument('--start_epoch', default=-1, help='start train epoch', type=int)
 
     model_group = parser.add_argument_group(title='model settings')
     # model settings
@@ -220,7 +221,7 @@ def parse_args(input_args=None):  # ['--configs_yml=configs/eval_3dpw_test.yml']
     for key, value in configs_update['ARGS'].items():  # 'tab' 'V1_hrnet'
         # make sure to update the configurations from .yml that not appears in input_args.
         appear_in_input_args = False
-        for input_arg in input_args:  # 如果运行时给定某个参数了就用这个更新配置，参数优先顺序为运行给定>yml配置文件>默认参数
+        for input_arg in input_args:  # 如果运行时给定某个参数了就用这个更新配置而不是yml更新，参数优先顺序为运行给定>yml配置文件>默认参数
             if isinstance(input_arg, str):
                 if '--{}'.format(key) in input_arg:
                     appear_in_input_args = True
@@ -237,6 +238,15 @@ def parse_args(input_args=None):  # ['--configs_yml=configs/eval_3dpw_test.yml']
             exec("parsed_args.{}_weight = {}".format(key, value))  # parsed_args.PAMPJPE_weight=360
     if 'sample_prob' in configs_update:
         parsed_args.sample_prob_dict = configs_update['sample_prob']
+
+    # 增加断点续存
+    if parsed_args.fine_tune and parsed_args.model_path:
+        try:
+            start_epoch = int(parsed_args.model_path.split('/')[-1].split('_')[1])  # */epoch_14_hrnet_cm128_V6_hrnet_relative_train.pkl
+        except Exception as e:
+            logging.info('model_path: {}, epoch i not exists'.format(parsed_args.model_path))
+            start_epoch = -1
+        parsed_args.start_epoch = start_epoch
 
     parsed_args.tab = '{}_cm{}_{}'.format(parsed_args.backbone,
                                           parsed_args.centermap_size,

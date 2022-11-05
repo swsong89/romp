@@ -1,5 +1,6 @@
 import os, sys
 import os.path as osp
+import time
 import numpy as np
 import cv2
 import torch
@@ -10,7 +11,8 @@ from .matching import match_2d_greedy
 Relative_Human_dir = '/home/yusun/data_drive/dataset/Relative_human'
 results_path = '/home/yusun/data_drive/evaluation_results/Relative_results/zip_files/CRMH_RH_results.npz'
 
-relative_age_types = ['adult', 'teen', 'kid', 'baby']
+# relative_age_types = ['adult', 'teen', 'kid', 'baby']
+relative_age_types = ['baby', 'kid', 'teen', 'adult']
 relative_depth_types = ['eq', 'cd', 'fd']
 
 BK_19 = {
@@ -114,23 +116,29 @@ def get_results(depth_relative, missed_age_ids, dr_thresh=0.2, miss_fine=0.3):
                                         dr_corrects[1].sum().item() / dr_all[1] * 100, dr_corrects[2].sum().item() / dr_all[2] * 100))
     dr_corrects = torch.cat(dr_corrects,0)
 
-    eval_results['PCRD_{}'.format(dr_thresh)] = dr_corrects.sum() / dr_all.sum()
     for age_ind, age_name in enumerate(relative_age_types):
         age_mask = (dr_age_ids == age_ind).sum(-1).bool()
         if age_mask.sum()>0:
             missed_num = (missed_age_ids == age_ind).sum()*miss_fine
             eval_results['PCRD_{}_{}'.format(dr_thresh, age_name)] = dr_corrects[age_mask].sum() / (age_mask.sum() + missed_num)
+    eval_results['PCRD_{}'.format(dr_thresh)] = dr_corrects.sum() / dr_all.sum()
     return eval_results
 
-def write2txt(path, contents):
+def write2txt(path, contents, model_name = "none_model_name"):
+    time_stamp = time.strftime('%Y-%m-%d_%H:%M:%S',time.localtime(int(round(time.time()*1000))/1000))
+    result_str = '\n' + time_stamp + '\n'
+    result_str += model_name + '\n'
+    for line in contents:
+        result_str += line + '    '
+
     with open(path, 'a') as f:
-        for line in contents:
-            f.write(line+"\n")
+        f.write(result_str)
 
 class RH_Evaluation(object):
-    def __init__(self, results_path, RH_dir, set_name='test'):
+    def __init__(self, results_path, RH_dir, set_name='test', model_name = 'bev'):
         super(RH_Evaluation, self).__init__()
         self.set_name = set_name
+        self.model_name = model_name
         self.load_gt(RH_dir)
         self.collect_results(results_path)
         self.results_txt_save_path = results_path.replace('.npz', '_results.txt')
@@ -256,14 +264,14 @@ class RH_Evaluation(object):
         missed_age_ids = torch.from_numpy(np.concatenate(missed_age_ids, 0))
         
         print_results = []
-        all_mPCKh = torch.cat(self.mPCKh).mean()
-        print_results.append('mPCKh_0.6: {:.2f}'.format(all_mPCKh * 100))
         eval_results = get_results(depth_relative, missed_age_ids)
         for key, item in eval_results.items():
             print_results.append('{}: {:.2f}'.format(key, float(item.item())*100))
+        all_mPCKh = torch.cat(self.mPCKh).mean()
+        print_results.append('mPCKh_0.6: {:.2f}'.format(all_mPCKh * 100))
         for numbers in print_results:
             print(numbers)
-        write2txt(self.results_txt_save_path, print_results)
+        write2txt(self.results_txt_save_path, print_results, self.model_name)
 
 
 if __name__ == '__main__':

@@ -18,11 +18,21 @@ if 'code' in osp.dirname(os.path.abspath(__file__)):
     root_dir = '/home/ssw/code/'
     user_dir = '/home/ssw/'
 
+ft_model_name = 'validation_epoch_2_iter_3999_MPJPE_111.85_PA_MPJPE_73.51_tab_hrnet_cm128_V6_hrnet_relative_ft.pkl'
+ft_path = root_dir  + '/romp/output_vis/checkpoints/hrnet_cm128_V6_hrnet_relative_ft_on_gpu0_val/' + ft_model_name
+
+train_model_name = 'epoch_31_iter_1999_MPJPE_0.00_PA_MPJPE_0.00_tab_hrnet_cm128_V6_hrnet_relative_train.pkl'
+train_path = root_dir  + '/romp/output_vis/checkpoints/hrnet_cm128_V6_hrnet_relative_train_on_gpu0_val/' + train_model_name
+
+path = ft_path
+
+path = train_path
+bev_path = user_dir + '/.romp/BEV.pth'
 
 model_id = 2
 model_dict = {
     1: root_dir + 'romp' + '/trained_models/BEV_Tabs/BEV_ft_agora.pth',
-    2: user_dir + '/.romp/BEV.pth',
+    2: path,
 }
 conf_dict = {1:[0.25, 40, 2], 2:[0.1, 40, 1.6]}
 
@@ -284,7 +294,7 @@ def match_2d_greedy(
 # following the code of coherece reconstruction of multiperson Jiang et. al.
 # Brought from https://github.com/JiangWenPL/multiperson/blob/4d3dbae945e22bb1e270521b061a837976699685/mmdetection/mmdet/core/utils/eval_utils.py#L265
 
-def evaluation_results():
+def evaluation_results(model_name):
     annots = np.load(osp.join(dataset_dir,'annots.npz'), allow_pickle=True)['annots'][()]
     results = np.load(osp.join(output_save_dir,'predictions.npz'), allow_pickle=True)['results'][()]
     action_name = ['haggling', 'mafia', 'ultimatum', 'pizza']
@@ -326,7 +336,7 @@ def evaluation_results():
     output_filename = osp.join(output_save_dir,'results.txt')
     time_stamp = time.strftime('%Y-%m-%d_%H:%M:%S', time.localtime(int(round(time.time() * 1000)) / 1000))
     result_str = '\n' + time_stamp + '\n'
-    result_str += model_name + 'Final results:' + '\n'
+    result_str += model_name + '\n' + 'Final results:' + '\n'
 
     avg_all = []
     for key,value in mpjpe_cacher.items():
@@ -342,4 +352,4 @@ def evaluation_results():
 if __name__ == '__main__':
     get_results()
     #load_gts()
-    evaluation_results()
+    evaluation_results(model_name=path.split('/')[-1])

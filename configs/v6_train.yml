@@ -10,15 +10,16 @@ ARGS:
  rotate_prob: 0.2
  image_loading_mode: 'image_relative'
  
+ model_path: /data2/2020/ssw/romp/output_vis/checkpoints/hrnet_cm128_V6_hrnet_relative_train_on_gpu0_val/epoch_31_iter_1999_MPJPE_0.00_PA_MPJPE_0.00_tab_hrnet_cm128_V6_hrnet_relative_train.pkl
+#  model_path: /data2/2020/ssw/romp/trained_models/pretrain_hrnet.pkl
 # 运行命令
-# CUDA_VISIBLE_DEVICES='0' python -u  romp/train.py --configs_yml='configs/v6_train.yml' >> log/hrnet_cm128_V6_hrnet_relative_train/hrnet_cm128_V6_hrnet_relative_train.log 2>&1
- fine_tune: False
+# CUDA_VISIBLE_DEVICES='1' nohup python -u  romp/train.py --configs_yml='configs/v6_train.yml' >> log/hrnet_cm128_V6_hrnet_relative_train/hrnet_cm128_V6_hrnet_relative_train.log 2>&1 &
+ fine_tune: True
  new_training: True
  new_training_iters: 600
- fast_eval_iter: 2000  # 在一个epoch中，迭代到了多少次就进行验证，一个epoch只进行一次，如设置200,说明迭代200就进行验证, 还有一个test_interval参数，这个表示迭代多少次就进行一次验证
+ fast_eval_iter: 2000 # 在一个epoch中，迭代到了多少次就进行验证，一个epoch只进行一次，如设置200,说明迭代200就进行验证, 还有一个test_interval参数，这个表示迭代多少次就进行一次验证
  print_freq: 50
 #  fast_eval_iter: 0
-
  learn_relative: True
  learn_relative_age: True
  learn_relative_depth: True
@@ -26,8 +27,8 @@ ARGS:
  add_depth_encoding: True
 
  master_batch_size: -1
- val_batch_size: 8
- batch_size: 8 # 64 8 需要8G  默认epoch120
+ val_batch_size: 16
+ batch_size: 16 # 64 8 需要8G  默认epoch120
  nw: 4
  nw_eval: 2
  lr: 0.00005
@@ -37,7 +38,6 @@ ARGS:
  perspective_proj: True
  max_supervise_num: 64
 
- model_path: None
 
  match_preds_to_gts_for_supervision: True
  fix_backbone_training_scratch: False

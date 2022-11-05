@@ -29,8 +29,25 @@ set_name = ['val', 'test'][set_id]
 method_id = 1
 method_name = ['ROMP', 'BEV'][method_id]
 
+# model_path = {
+#     'BEV': user_dir + '/.romp/BEV.pth',
+# }
+#   CUDA_VISIBLE_DEVICES='1' python simple_romp/evaluation/eval_Relative_Human.py
+
+
+ft_model_name = 'validation_epoch_2_iter_3999_MPJPE_111.85_PA_MPJPE_73.51_tab_hrnet_cm128_V6_hrnet_relative_ft.pkl'
+ft_path = root_dir  + '/romp/output_vis/checkpoints/hrnet_cm128_V6_hrnet_relative_ft_on_gpu0_val/' + ft_model_name
+
+train_model_name = 'validation_epoch_44_iter_9999_MPJPE_120.42_PA_MPJPE_78.86_tab_hrnet_cm128_V6_hrnet_relative_train.pkl'
+train_path = root_dir  + '/romp/output_vis/checkpoints/hrnet_cm128_V6_hrnet_relative_train_on_gpu0_val/' + train_model_name
+
+path = ft_path
+
+path = train_path
+
+
 model_path = {
-    'BEV': user_dir + '/.romp/BEV.pth',
+    'BEV': path,
 }
 visualize_results = False
 
@@ -154,8 +171,8 @@ if __name__ == '__main__':
     if method_name == 'ROMP':
         result_save_path = get_ROMP_results_on_RH(set_name)
         #result_save_path = osp.join(output_save_dir, 'test_results.npz')
-        RH_Evaluation(result_save_path, Relative_Human_dir, set_name)
+        RH_Evaluation(result_save_path, Relative_Human_dir, set_name, path.split('/')[-1])
     if 'BEV' in method_name:
         result_save_path = get_BEV_results_on_RH(set_name)
         #result_save_path = osp.join(output_save_dir, 'test_results.npz')
-        RH_Evaluation(result_save_path, Relative_Human_dir, set_name)
+        RH_Evaluation(result_save_path, Relative_Human_dir, set_name, path.split('/')[-1])

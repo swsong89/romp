@@ -12,11 +12,11 @@ def justify_detection_state(detection_flag, reorganize_idx):
         detection_flag = True
     return detection_flag, reorganize_idx
 
-def copy_state_dict(cur_state_dict, pre_state_dict, prefix = 'module.', drop_prefix='', fix_loaded=False):
+def copy_state_dict(cur_state_dict: object, pre_state_dict: object, prefix: object = 'module.', drop_prefix: object = '', fix_loaded: object = False) -> object:  # fix_loaded=True
     success_layers, failed_layers = [], []
-    def _get_params(key):
-        key = key.replace(drop_prefix,'')
-        key = prefix + key
+    def _get_params(key):  # key = 'coordmap_3d'
+        key = key.replace(drop_prefix,'')  # 如果key = 'drop_prefix coordmap_3d' 变成key = 'coordmap_3d'
+        key = prefix + key  # 'module.coordmap_3d'
         if key in pre_state_dict:
             return pre_state_dict[key]
         return None
@@ -34,7 +34,8 @@ def copy_state_dict(cur_state_dict, pre_state_dict, prefix = 'module.', drop_pre
         except:
             print('copy param {} failed, mismatched'.format(k)) # logging.info
             continue
-    print('missing parameters of layers:{}'.format(failed_layers))
+    logging.info('missing parameters of layers:{}'.format(failed_layers))
+    logging.info('missing parameters of layers size:{}'.format(len(failed_layers)))
 
     if fix_loaded and len(failed_layers)>0:
         logging.info('fixing the layers that were loaded successfully, while train the layers that failed,')
@@ -49,12 +50,18 @@ def copy_state_dict(cur_state_dict, pre_state_dict, prefix = 'module.', drop_pre
 
 def load_model(path, model, prefix = 'module.', drop_prefix='',optimizer=None, **kwargs):
     logging.info('using fine_tune model: {}'.format(path))
-    if os.path.exists(path):
+    if os.path.exists(path):  # 当前目录是/home/ssw/code/romp/romp/ '../output_vis/checkpoints/hrnet_cm128_V6_hrnet_relative_train_on_gpu0_val/epoch_0_hrnet_cm128_V6_hrnet_relative_train.pkl'
         pretrained_model = torch.load(path)
         current_model = model.state_dict()
         if isinstance(pretrained_model, dict):
-            if 'model_state_dict' in pretrained_model:
+            if 'model_state_dict' in pretrained_model: # 之前是这样保存模型的model_save = {'model_state_dict':model.state_dict(),'optimizer_state_dict':optimizer.state_dict()}
                 pretrained_model = pretrained_model['model_state_dict']
+        try:
+            test = pretrained_model['module.backbone.conv1.weight']  # BEV_HRNet32_V6.pkl 'module.backbone.conv1.weight' missing parameters of layers size:28, BEV.pth  backbone.conv1.weight 21, 其余epoch_.pkl backbone.conv1.weight  0 
+        except:   
+            prefix = ''
+        if 'pretrain' in path:  # pretrain里面都是conv1.weightr,不带backbone, 训练模型里面是 backbone.conv1.weight, 所以需要给pretrain加上backbone
+            drop_prefix = 'backbone.'
         copy_state_dict(current_model, pretrained_model, prefix = prefix, drop_prefix=drop_prefix, **kwargs)
     else:
         logging.warning('model {} not exist!'.format(path))

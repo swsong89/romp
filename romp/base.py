@@ -33,15 +33,15 @@ class Base(object):
     def __init__(self):
         self.project_dir = config.project_dir
         hparams_dict = self.load_config_dict(vars(args()))
-        self._init_log(hparams_dict)
-        self._init_params()
+        self._init_log(hparams_dict)  # 打印配置，根据设置创建一些output目录
+        self._init_params()  # 根据配置初始化一些参数
         if self.save_visualization_on_img:
             self.visualizer = Visualizer(resolution=(512,512), result_img_dir=self.result_img_dir, with_renderer=True)
 
     def _build_model_(self):
         logging.info('start building model.')
         model = build_model()
-        if self.fine_tune or self.eval:
+        if self.fine_tune or self.eval:  # 微调的话就是在这个基础上进行训练
             drop_prefix = ''
             if self.model_version==6:
                 model = load_model(self.model_path, model, prefix = 'module.', drop_prefix=drop_prefix, fix_loaded=True)
@@ -75,10 +75,10 @@ class Base(object):
         logging.info('finished build model.')
     
     def _init_log(self, hparams_dict):
-        self.log_path = os.path.join(self.log_path,'{}'.format(self.tab))
-        print('log_path: ', self.log_path)
+        self.log_path = os.path.join(self.log_path,'{}'.format(self.tab))  # /home/ssw/code/romp/log/hrnet_cm128_V6_hrnet_relative_train
         os.makedirs(self.log_path,exist_ok=True)
         self.log_file = os.path.join(self.log_path,'{}.log'.format(self.tab))
+        print('log_path: ', self.log_file)  # '/home/ssw/code/romp/log/hrnet_cm128_V6_hrnet_relative_train/hrnet_cm128_V6_hrnet_relative_train.log'
         write2log(self.log_file,'================ Training Loss (%s) ================\n' % time.strftime("%c"))
         self.summary_writer = SummaryWriter(self.log_path)
         save_yaml(hparams_dict, self.log_file.replace('.log', '.yml'))
@@ -94,7 +94,7 @@ class Base(object):
         self.global_count = 0
         self.eval_cfg = {'mode':'matching_gts', 'is_training':False, 'calc_loss': False, 'with_nms':False, 'with_2d_matching':True}
         self.val_cfg = {'mode':'parsing', 'calc_loss': False,'with_nms':False}
-        self.gpus = [int(i) for i in str(self.gpu).split(',')]
+        self.gpus = [int(i) for i in str(self.gpu).split(',')]  # [0,1]
 
         self.chunk_sizes = []
         if not self.distributed_training and self.master_batch_size != -1:
@@ -106,12 +106,12 @@ class Base(object):
                     slave_chunk_size += 1
                 self.chunk_sizes.append(slave_chunk_size)
         else:
-            self.chunk_sizes = (np.ones(len(self.gpus)).astype(np.int32) * (self.batch_size//(len(self.gpus)))).tolist()
+            self.chunk_sizes = (np.ones(len(self.gpus)).astype(np.int32) * (self.batch_size//(len(self.gpus)))).tolist() # [2,2] 如果batch_size是4，gpus=0,1,分到两个gpu上就各是2
         
         logging.info('training chunk_sizes:{}'.format(self.chunk_sizes))
 
-        self.lr_hip_idx = np.array([constants.SMPL_ALL_54['L_Hip'], constants.SMPL_ALL_54['R_Hip']])
-        self.lr_hip_idx_lsp = np.array([constants.LSP_14['L_Hip'], constants.LSP_14['R_Hip']])
+        self.lr_hip_idx = np.array([constants.SMPL_ALL_54['L_Hip'], constants.SMPL_ALL_54['R_Hip']])  # 46，45
+        self.lr_hip_idx_lsp = np.array([constants.LSP_14['L_Hip'], constants.LSP_14['R_Hip']])  # 3，2
         self.kintree_parents = np.array([-1, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 9, 9, 12, 13, 14, 16,17, 18, 19, 20, 21],dtype=np.int)
         self.All54_to_LSP14_mapper = constants.joint_mapping(constants.SMPL_ALL_54, constants.LSP_14)
 
@@ -128,7 +128,7 @@ class Base(object):
         return outputs
 
     def _create_data_loader(self,train_flag=True):
-        logging.info('gathering mixed image datasets.')
+        logging.info('gathering train mixed image datasets.')
         datasets = MixedDataset(self.dataset.split(','), self.sample_prob_dict, train_flag=train_flag)
         batch_size = self.batch_size if train_flag else self.val_batch_size
         if self.distributed_training:
@@ -152,8 +152,9 @@ class Base(object):
         self.evaluation_results_dict = {}
         self.val_best_PAMPJPE = {}
         for ds in eval_datasets:
-            self.evaluation_results_dict[ds] = {'MPJPE':[], 'PAMPJPE':[]}
+            self.evaluation_results_dict[ds] = {'MPJPE':[], 'PAMPJPE':[]}  # {'relative': {'MPJPE': [], 'PAMPJPE': []}, 'agora': {'MPJPE': [], 'PAMPJPE': []}}
         self.dataset_val_list, self.dataset_test_list = {}, {}
+        logging.info('gathering test val  image datasets.')
         if 'relative' in eval_datasets:
             self.dataset_val_list['relative'] = self._create_single_data_loader(dataset='relative_human', split='val', train_flag = False)
             self.dataset_test_list['relative'] = self._create_single_data_loader(dataset='relative_human', split='test', train_flag = False)
