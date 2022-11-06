@@ -41,7 +41,7 @@ class Base(object):
     def _build_model_(self):
         logging.info('start building model.')
         model = build_model()
-        if self.fine_tune or self.eval:  # 微调的话就是在这个基础上进行训练
+        if self.fine_tune or self.eval:  # 微调的话就是在这个基础上进行训练,所以这个参数需要给定Model_path,
             drop_prefix = ''
             if self.model_version==6:
                 model = load_model(self.model_path, model, prefix = 'module.', drop_prefix=drop_prefix, fix_loaded=True)
