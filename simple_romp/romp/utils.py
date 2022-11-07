@@ -55,12 +55,13 @@ class ResultSaver:
     def __call__(self, outputs, input_path, prefix=None, img_ext='.png'):
         if self.mode == 'video' or self.is_dir:
             save_name = osp.basename(input_path)
-            save_path = osp.join(self.save_dir, osp.splitext(save_name)[0])+img_ext
+            os.makedirs(osp.join(self.save_dir, 'video_tmp'), exist_ok=True)
+            save_path = osp.join(self.save_dir, 'video_tmp', osp.splitext(save_name)[0])+img_ext
         elif self.mode == 'image':
             save_path = self.save_path
 
         if prefix is not None:
-            save_path = osp.splitext(save_path)[0]+f'_{prefix}'+osp.splitext(save_path)[1]
+            save_path = osp.splitext(save_path)[0]+f'{prefix}'+osp.splitext(save_path)[1]
 
         rendered_image = None
         if outputs is not None:

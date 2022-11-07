@@ -32,7 +32,7 @@ log/*
 
 
 *.json
-
+*.pth
 
 # service
 
