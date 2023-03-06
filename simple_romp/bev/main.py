@@ -7,9 +7,9 @@ import torch
 from torch import nn
 import argparse
 import copy
-
-from .model import BEVv1
-from .post_parser import SMPLA_parser, body_mesh_projection2image, pack_params_dict,\
+from tqdm import tqdm
+from model import BEVv1
+from post_parser import SMPLA_parser, body_mesh_projection2image, pack_params_dict,\
     suppressing_redundant_prediction_via_projection, remove_outlier, denormalize_cam_params_to_trans
 from romp.utils import img_preprocess, create_OneEuroFilter, check_filter_state, \
     time_cost, download_model, determine_device, ResultSaver, WebcamVideoStream, \
@@ -26,9 +26,9 @@ long_conf_dict = {1:[0.12, 20, 1.5, 0.46], 2:[0.08, 20, 1.6, 0.8]}
 
 def bev_settings(input_args=sys.argv[1:]):
     parser = argparse.ArgumentParser(description = 'ROMP: Monocular, One-stage, Regression of Multiple 3D People')
-    parser.add_argument('-m', '--mode', type=str, default='image', help = 'Inferece mode, including image, video, webcam')
+    parser.add_argument('-m', '--mode', type=str, default='video', help = 'Inferece mode, including image, video, webcam')
     parser.add_argument('--model_id', type=int, default=2, help = 'Whether to process the input as a long image, sliding window way')
-    parser.add_argument('-i', '--input', type=str, default='/home/yusun/CenterMesh/simple_romp/test/ages.png', help = 'Path to the input image / video')
+    parser.add_argument('-i', '--input', type=str, default='demo/sample_video.mp4', help = 'Path to the input image / video')
     parser.add_argument('-o', '--save_path', type=str, default=osp.join(osp.expanduser("~"),'BEV_results'), help = 'Path to save the results')
     parser.add_argument('--crowd', action='store_false', help = 'Whether to process the input as a long image, sliding window way')
     parser.add_argument('--GPU', type=int, default=0, help = 'The gpu device number to run the inference on. If GPU=-1, then running in cpu mode')
@@ -41,7 +41,7 @@ def bev_settings(input_args=sys.argv[1:]):
     parser.add_argument('--show_patch_results', action='store_true', help = 'During processing long image, whether to show the results of intermediate results of each patch.')
     parser.add_argument('--calc_smpl', action='store_false', help = 'Whether to calculate the smpl mesh from estimated SMPL parameters')
     parser.add_argument('--renderer', type=str, default='sim3dr', help = 'Choose the renderer for visualizaiton: pyrender (great but slow), sim3dr (fine but fast), open3d (webcam)')
-    parser.add_argument('--render_mesh', action='store_false', help = 'Whether to render the estimated 3D mesh mesh to image')
+    parser.add_argument('--render_mesh', action='store_true', default=True, help = 'Whether to render the estimated 3D mesh mesh to image')
     parser.add_argument('--show', action='store_true', help = 'Whether to show the rendered results')
     parser.add_argument('--show_items', type=str, default='mesh,mesh_bird_view', help = 'The items to visualized, including mesh,pj2d,j3d,mesh_bird_view,mesh_side_view,center_conf,rotate_mesh. splited with ,')
     parser.add_argument('--save_video', action='store_true', help = 'Whether to save the video results')
@@ -84,7 +84,6 @@ def bev_settings(input_args=sys.argv[1:]):
     
     return args
 
-default_settings = bev_settings(input_args=[])
 
 class BEV(nn.Module):
     def __init__(self, romp_settings):
@@ -116,7 +115,7 @@ class BEV(nn.Module):
         self.OE_filters = {}
         if not self.settings.show_largest:
             from tracker.byte_tracker_3dcenter import Tracker
-            self.tracker = Tracker(det_thresh=0.12, low_conf_det_thresh=0.05, track_buffer=60, match_thresh=300, frame_rate=30)
+            self.tracker = Tracker(det_thresh=0.12, low_conf_det_thresh=0.05, track_buffer=60, match_thresh=300, frame_rate=30000/1001)
 
     def single_image_forward(self, image):
         input_image, image_pad_info = img_preprocess(image)
@@ -143,9 +142,14 @@ class BEV(nn.Module):
             return None
 
         if self.settings.render_mesh:
-            mesh_color_type = 'identity' if self.settings.mode!='webcam' and not self.settings.save_video else 'same'
+            # mesh_color_type = 'identity' if self.settings.mode!='webcam' and not self.settings.save_video else 'same'
+            # mesh_color_type = 'identity' if self.settings.mode!='webcam'  else 'same'
+            mesh_color_type = 'same'
             rendering_cfgs = {'mesh_color':mesh_color_type, 'items': self.visualize_items, 'renderer': self.settings.renderer}
             outputs = rendering_romp_bev_results(self.renderer, outputs, image, rendering_cfgs)
+        # print('render_mesh: ', self.settings.render_mesh)
+        # print('mesh_color_type: ', mesh_color_type)
+
         if self.settings.show:
             h, w = outputs['rendered_image'].shape[:2]
             show_image = outputs['rendered_image'] if h<=1080 else cv2.resize(outputs['rendered_image'], (int(w*(1080/h)), 1080))
@@ -153,9 +157,9 @@ class BEV(nn.Module):
             wait_func(self.settings.mode)
         return convert_tensor2numpy(outputs)
         
-    def process_normal_image(self, image, signal_ID):
-        outputs, image_pad_info = self.single_image_forward(image)
-        meta_data = {'input2org_offsets': image_pad_info}
+    def process_normal_image(self, image, signal_ID):  # image.shape HWC(720, 1280, 3) signal_ID 0
+        outputs, image_pad_info = self.single_image_forward(image)  # outputs['params_pred'].shape [4,146] 第1张预测到了4个人
+        meta_data = {'input2org_offsets': image_pad_info}  # image_pad_info [ 280., 1000.,    0., 1280.,  720., 1280.]
         
         if outputs is None:
             return None
@@ -266,19 +270,19 @@ class BEV(nn.Module):
                     outputs['smpl_thetas'][max_id], outputs['smpl_betas'][max_id], outputs['cam'][max_id])
             outputs['smpl_thetas'], outputs['smpl_betas'], outputs['cam'] = outputs['smpl_thetas'].unsqueeze(0), outputs['smpl_betas'].unsqueeze(0), outputs['cam'].unsqueeze(0)
         else:
-            cam_trans = outputs['cam_trans'].cpu().numpy()
+            cam_trans = outputs['cam_trans'].cpu().numpy()  # cam_trans [4,3]
             cams = outputs['cam'].cpu().numpy()
-            det_confs = outputs['center_confs'].cpu().numpy()
+            det_confs = outputs['center_confs'].cpu().numpy()  # det_confs = [0.6147363 , 0.5119987 , 0.48980665, 0.3747269 ]
             tracking_points = np.concatenate([(cams[:,[2,1]]+1)*image_scale, cam_trans[:,[2]]*depth_scale, cams[:,[0]]*image_scale/2],1)
-            tracked_ids, results_inds = self.tracker.update(tracking_points, det_confs)
+            tracked_ids, results_inds = self.tracker.update(tracking_points, det_confs)  # [1, 2, 3, 4] [0, 1, 2, 3]
             if len(tracked_ids) == 0:
                 return None
 
-            for key in self.result_keys:
+            for key in self.result_keys:  # results_inds是检测到的人数据,序号对应的人数据保存
                 outputs[key] = outputs[key][results_inds]
 
-            for ind, tid in enumerate(tracked_ids):
-                if tid not in self.OE_filters[signal_ID]:
+            for ind, tid in enumerate(tracked_ids):  # 平滑结果
+                if tid not in self.OE_filters[signal_ID]:  # signal_ID 对应的帧序号,如果跟踪的人不在，添加结果
                     self.OE_filters[signal_ID][tid] = create_OneEuroFilter(self.settings.smooth_coeff)
                 outputs['smpl_thetas'][ind], outputs['smpl_betas'][ind], outputs['cam'][ind] = \
                     smooth_results(self.OE_filters[signal_ID][tid], \
@@ -287,23 +291,29 @@ class BEV(nn.Module):
         return outputs
 
 def main():
-    args = bev_settings()
+    args = bev_settings(sys.argv[1:])
     bev = BEV(args)
     if args.mode == 'image':
         saver = ResultSaver(args.mode, args.save_path)
         image = cv2.imread(args.input)
+        # 计算参数量
+        # from torchsummaryX import summary
+        # summary(bev,image)
+
         outputs = bev(image)
         saver(outputs, args.input, prefix=f'{args.center_thresh}')
     
     if args.mode == 'video':
         frame_paths, video_save_path = collect_frame_path(args.input, args.save_path)
         saver = ResultSaver(args.mode, args.save_path)
-        for frame_path in progress_bar(frame_paths):
+        for frame_path in tqdm(frame_paths):
+        # for frame_path in progress_bar(frame_paths):
             image = cv2.imread(frame_path)
             outputs = bev(image)
             saver(outputs, frame_path, prefix=f'_{model_id}_{args.center_thresh}')
         save_video_results(saver.frame_save_paths)
         if args.save_video:
+            print('video_save_path: ', video_save_path)
             saver.save_video(video_save_path, frame_rate=args.frame_rate)
 
     if args.mode == 'webcam':
@@ -317,6 +327,37 @@ def main():
         cap.stop()
 
 if __name__ == '__main__':
+    # input_args = ['-m=image', '-i=/home/ssw/code/romp/demo/.mp',
+    #             '-o=/home/ssw/code/romp/demo/3dpw_bev',
+    #             '--calc_smpl', '--save_video',
+    #             # '-t', '-sc=3.'
+    #             # , '--show'
+    #             ]
+    # sys.argv += input_args
     main()
+
+"""
+romp
+                            Totals
+Total params             29.048274M
+Trainable params         29.048274M
+Non-trainable params            0.0
+Mult-Adds             42.855329248G
+        
+        
+bev
+单人
+FPS 8 
+ 297/300 [00:58<00:00,  5.58it/s]
+ 多人
+ FPS 9.8
+ [00:17<00:00,  6.96it/s]
+                             Totals
+Total params             35.878223M
+Trainable params         35.878223M
+Non-trainable params            0.0
+Mult-Adds             48.400618328G
+
+"""
     
     

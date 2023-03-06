@@ -2,8 +2,8 @@ import torch
 from torch import nn
 import sys,os
 import numpy as np
-from .smpl import SMPL
-from .utils import rot6D_to_angular, batch_orth_proj, estimate_translation
+from smpl import SMPL
+from utils import rot6D_to_angular, batch_orth_proj, estimate_translation
 
 class CenterMap(object):
     def __init__(self, conf_thresh):

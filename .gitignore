@@ -13,9 +13,12 @@ scripts/*
 *.html
 */.romp
 *.pkl
+*.npz
+*.jpg
+*.png
+demo_all
 
-
-
+*.mp4
 *.zip
 *.c
 

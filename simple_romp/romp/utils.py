@@ -91,7 +91,12 @@ def save_video_results(frame_save_paths):
     video_sequence_results = {}
     for frame_id, save_path in enumerate(frame_save_paths):
         npz_path = osp.splitext(save_path)[0]+'.npz'
-        frame_results = np.load(npz_path, allow_pickle=True)['results'][()]
+        try:
+            frame_results = np.load(npz_path, allow_pickle=True)['results'][()]
+        except:
+            print('file is not exist: {}'.format(npz_path))
+            continue
+            
         base_name = osp.basename(save_path)
         video_results[base_name] = frame_results
         
@@ -408,7 +413,7 @@ def estimate_translation(joints_3d, joints_2d, pts_mnum=4,focal_length=600, proj
         joints_conf = joints_2d[:, :, -1]>0
     joints3d_conf = joints_3d[:, :, -1]!=-2.
     
-    trans = np.zeros((joints_3d.shape[0], 3), dtype=np.float)
+    trans = np.zeros((joints_3d.shape[0], 3), dtype=np.float64)
     if proj_mats is None:
         proj_mats = [None for _ in range(len(joints_2d))]
     if cam_dists is None:

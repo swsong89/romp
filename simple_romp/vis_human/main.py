@@ -22,15 +22,15 @@ def setup_renderer(name='sim3dr', **kwargs):
 
 def rendering_romp_bev_results(renderer, outputs, image, rendering_cfgs, alpha=1):
     triangles = outputs['smpl_face'].cpu().numpy().astype(np.int32)
-    h, w = image.shape[:2]
+    h, w = image.shape[:2]  # 720, 1080
     #length = max(h, w)
-    background = np.ones([h, h, 3], dtype=np.uint8) * 255
+    background = np.ones([h, h, 3], dtype=np.uint8) * 255  # 渲染bev背景，长宽和原图的宽一样
     result_image = [image]
 
     cam_trans = outputs['cam_trans']
     if rendering_cfgs['mesh_color'] == 'identity':
         if 'track_ids' in outputs:
-            mesh_colors = mesh_color_trackID(outputs['track_ids'])
+            mesh_colors = mesh_color_trackID(outputs['track_ids'])  #  [0.85 , 0.325, 0.098] [0.929, 0.694, 0.125] [0.494, 0.184, 0.556] [0.466, 0.674, 0.188]
         else:
             mesh_colors = mesh_color_left2right(cam_trans)
     elif rendering_cfgs['mesh_color'] == 'same':

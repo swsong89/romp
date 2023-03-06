@@ -1,4 +1,9 @@
-from .model import ROMPv1
+import os, sys
+import os.path as osp
+import sys
+sys.path.insert(0, osp.join(osp.dirname(os.path.abspath(__file__)), '..'))  # '/home/ssw/code/romp/simple_romp/bev' + '..'
+
+from model import ROMPv1
 import cv2
 import numpy as np
 import os, sys
@@ -6,19 +11,20 @@ import os.path as osp
 import torch
 from torch import nn
 import argparse
+from tqdm import tqdm
 
-from .post_parser import SMPL_parser, body_mesh_projection2image, parsing_outputs
-from .utils import img_preprocess, create_OneEuroFilter, euclidean_distance, check_filter_state, \
+from post_parser import SMPL_parser, body_mesh_projection2image, parsing_outputs
+from utils import img_preprocess, create_OneEuroFilter, euclidean_distance, check_filter_state, \
     time_cost, download_model, determine_device, ResultSaver, WebcamVideoStream, convert_cam_to_3d_trans,\
     wait_func, collect_frame_path, progress_bar, get_tracked_ids, smooth_results, convert_tensor2numpy, save_video_results
 from vis_human import setup_renderer, rendering_romp_bev_results
-from .post_parser import CenterMap
+from post_parser import CenterMap
 
 def romp_settings(input_args=sys.argv[1:]):
     parser = argparse.ArgumentParser(description = 'ROMP: Monocular, One-stage, Regression of Multiple 3D People')
-    parser.add_argument('-m', '--mode', type=str, default='image', help = 'Inferece mode, including image, video, webcam')
-    parser.add_argument('-i', '--input', type=str, default=None, help = 'Path to the input image / video')
-    parser.add_argument('-o', '--save_path', type=str, default=osp.join(osp.expanduser("~"),'ROMP_results'), help = 'Path to save the results')
+    parser.add_argument('-m', '--mode', type=str, default='video', help = 'Inferece mode, including image, video, webcam')
+    parser.add_argument('-i', '--input', type=str, default='demo/3dpw.mp4', help = 'Path to the input image / video')
+    parser.add_argument('-o', '--save_path', type=str, default='demo/3dpw_romp', help = 'Path to save the results')
     parser.add_argument('--GPU', type=int, default=0, help = 'The gpu device number to run the inference on. If GPU=-1, then running in cpu mode')
     parser.add_argument('--onnx', action='store_true', help = 'Whether to use ONNX for acceleration.')
 
@@ -26,12 +32,12 @@ def romp_settings(input_args=sys.argv[1:]):
     parser.add_argument('--center_thresh', type=float, default=0.25, help = 'The confidence threshold of positive detection in 2D human body center heatmap.')
     parser.add_argument('--show_largest', action='store_true', help = 'Whether to show the largest person only')
     parser.add_argument('-sc','--smooth_coeff', type=float, default=3., help = 'The smoothness coeff of OneEuro filter, the smaller, the smoother.')
-    parser.add_argument('--calc_smpl', action='store_false', help = 'Whether to calculate the smpl mesh from estimated SMPL parameters')
-    parser.add_argument('--render_mesh', action='store_true', help = 'Whether to render the estimated 3D mesh mesh to image')
+    parser.add_argument('--calc_smpl', default=True,action='store_false', help = 'Whether to calculate the smpl mesh from estimated SMPL parameters')
+    parser.add_argument('--render_mesh', default=True,action='store_true', help = 'Whether to render the estimated 3D mesh mesh to image')
     parser.add_argument('--renderer', type=str, default='sim3dr', help = 'Choose the renderer for visualizaiton: pyrender (great but slow), sim3dr (fine but fast)')
     parser.add_argument('--show', action='store_true', help = 'Whether to show the rendered results')
     parser.add_argument('--show_items', type=str, default='mesh', help = 'The items to visualized, including mesh,pj2d,j3d,mesh_bird_view,mesh_side_view,center_conf. splited with ,')
-    parser.add_argument('--save_video', action='store_true', help = 'Whether to save the video results')
+    parser.add_argument('--save_video', default=True,  action='store_true', help = 'Whether to save the video results')
     parser.add_argument('--frame_rate', type=int, default=24, help = 'The frame_rate of saved video results')
     parser.add_argument('--smpl_path', type=str, default=osp.join(osp.expanduser("~"),'.romp','smpl_packed_info.pth'), help = 'The path of smpl model file')
     parser.add_argument('--model_path', type=str, default=osp.join(osp.expanduser("~"),'.romp','ROMP.pkl'), help = 'The path of ROMP checkpoint')
@@ -178,17 +184,24 @@ def main():
     if args.mode == 'image':
         saver = ResultSaver(args.mode, args.save_path)
         image = cv2.imread(args.input)
+        # 计算参数量
+
+        # from torchsummaryX import summary
+        # summary(romp, image)
         outputs = romp(image)
         saver(outputs, args.input)
     
     if args.mode == 'video':
         frame_paths, video_save_path = collect_frame_path(args.input, args.save_path)
         saver = ResultSaver(args.mode, args.save_path)
-        for frame_path in progress_bar(frame_paths):
+        for frame_path in tqdm(frame_paths):
+        # for frame_path in progress_bar(frame_paths):
             image = cv2.imread(frame_path)
             outputs = romp(image)
             saver(outputs, frame_path)
         save_video_results(saver.frame_save_paths)
+        print('save_video: ', args.save_video)
+        print('save_path: ', video_save_path)
         if args.save_video:
             saver.save_video(video_save_path, frame_rate=args.frame_rate)
 
@@ -201,6 +214,21 @@ def main():
         cap.stop()
 
 if __name__ == '__main__':
+    input_args = ['-m video', '-i /home/ssw/code/romp/demo/3dpw.mp4',
+                '-o /home/ssw/code/romp/demo//3dpw_romp.mp4',
+                '--calc_smpl', '--render_mesh'
+                # ,'-t ', '-sc 3.'
+                ]
+    sys.argv += input_args
     main()
     
+"""
+romp
+                            Totals
+Total params             29.048274M
+Trainable params         29.048274M
+Non-trainable params            0.0
+Mult-Adds             42.855329248G
+        
+"""
     

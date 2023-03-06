@@ -1,15 +1,37 @@
+
+# video
 romp --mode=video --calc_smpl --render_mesh -i=/path/to/image/folder/ -o=/path/to/output/folder/
 
 
-romp --mode=video --calc_smpl --render_mesh -i demo/football.mp4 -o demo/football_romp_t.mp4 --save_video -t -sc=3
+romp --mode=video --calc_smpl --render_mesh -i demo_test/football.mp4 -o demo_test/football_romp_t.mp4 --save_video -t -sc=3
 
 
 romp --mode=video --calc_smpl --render_mesh -i demo/football.mp4 -o demo/football/football_romp_t.mp4 --save_video -t -sc=3
 
+#images
+romp --mode=image --calc_smpl --render_mesh -o demo_test/images -i demo_test/images/crowd1.jpg 
 
 romp [-h] [-m MODE] [-i INPUT] [-o SAVE_PATH] [--GPU GPU] [--onnx] [-t] [--center_thresh CENTER_THRESH] [--show_largest] [-sc SMOOTH_COEFF]
             [--calc_smpl] [--render_mesh] [--renderer RENDERER] [--show] [--show_items SHOW_ITEMS] [--save_video] [--frame_rate FRAME_RATE]
             [--smpl_path SMPL_PATH] [--model_path MODEL_PATH] [--model_onnx_path MODEL_ONNX_PATH] [--root_align ROOT_ALIGN]
 
 
-bev -m video -i demo/football.mp4 -o demo/football/football_bev_t.mp4 --save_video -t -sc=3 --save_video
+bev -m video -i demo/football.mp4 -o demo/football/football_bev_smooth.mp4 --save_video -t -sc=3 --save_video
+
+bev -m video -i demo/dance.mp4 -o demo/football/dance_bev_smooth.mp4 --save_video -t -sc=3 --save_video
+为了方便修改，将从命令行调用改成在simple_romp/bev/main.py调用
+
+#images
+bev -m image -o demo/demo_images -i demo/demo_images/
+
+
+# video
+bev -m video -i demo_test/3dpw.mp4 -o demo_test/3dpw_bev.mp4 --save_video
+
+
+
+# video2images
+python ../tool/tool.py  -m v -i demo_test/3dpw_romp.mp4 -o demo_test/3dpw_romp
+python ../tool/tool.py  -m i -i demo_test/3dpw_romp -o demo_test/3dpw_romp.mp4
+
+
